@@ -31,7 +31,7 @@ type Info struct {
 
 func TestReflect(t *testing.T) {
 	tab := NewUnicode()
-	tab.Header(Left, Middle, NewText("Field"))
+	tab.Header(Right, Middle, NewText("Field"))
 	tab.Header(Left, Middle, NewText("Value"))
 
 	err := Reflect(tab, &Outer{

@@ -428,7 +428,7 @@ type Lines struct {
 }
 
 func NewLines(str string) *Lines {
-	lines := strings.Split(strings.TrimSpace(str), "\n")
+	lines := strings.Split(strings.TrimRight(str, "\n"), "\n")
 
 	var max int
 	for _, line := range lines {

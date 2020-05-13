@@ -12,6 +12,23 @@ import (
 	"strings"
 )
 
+type Align int
+
+const (
+	Left Align = iota
+	Center
+	Right
+	None
+)
+
+type VAlign int
+
+const (
+	Top VAlign = iota
+	Middle
+	Bottom
+)
+
 type Border struct {
 	H  string
 	VL string
@@ -81,28 +98,28 @@ type Tabulate struct {
 
 type Escape func(string) string
 
-func NewTabulateWS() *Tabulate {
+func NewWS() *Tabulate {
 	return &Tabulate{
 		Padding: 2,
 		Border:  WhiteSpace,
 	}
 }
 
-func NewTabulateASCII() *Tabulate {
+func NewASCII() *Tabulate {
 	return &Tabulate{
 		Padding: 2,
 		Border:  ASCII,
 	}
 }
 
-func NewTabulateUnicode() *Tabulate {
+func NewUnicode() *Tabulate {
 	return &Tabulate{
 		Padding: 2,
 		Border:  Unicode,
 	}
 }
 
-func NewTabulateColon() *Tabulate {
+func NewColon() *Tabulate {
 	return &Tabulate{
 		Padding: 0,
 		Border:  Colon,
@@ -130,7 +147,7 @@ func escapeCSV(val string) string {
 	return string(runes)
 }
 
-func NewTabulateCSV() *Tabulate {
+func NewCSV() *Tabulate {
 	return &Tabulate{
 		Padding: 0,
 		Border:  CSV,
@@ -138,10 +155,11 @@ func NewTabulateCSV() *Tabulate {
 	}
 }
 
-func (t *Tabulate) Header(align Align, data Data) *Tabulate {
+func (t *Tabulate) Header(align Align, valign VAlign, data Data) *Tabulate {
 	t.Headers = append(t.Headers, Column{
-		Align: align,
-		Data:  data,
+		Align:  align,
+		VAlign: valign,
+		Data:   data,
 	})
 	return t
 }
@@ -200,7 +218,7 @@ func (t *Tabulate) Print(o io.Writer) {
 			if idx < len(t.Headers) {
 				hdr = t.Headers[idx]
 			}
-			t.PrintColumn(o, hdr, idx, line, width)
+			t.PrintColumn(o, hdr, idx, line, width, height)
 		}
 		fmt.Fprintln(o, t.Border.VR)
 	}
@@ -229,7 +247,7 @@ func (t *Tabulate) Print(o io.Writer) {
 				if idx < len(row.Columns) {
 					col = row.Columns[idx]
 				}
-				t.PrintColumn(o, col, idx, line, width)
+				t.PrintColumn(o, col, idx, line, width, height)
 			}
 			fmt.Fprintln(o, t.Border.VR)
 		}
@@ -250,32 +268,47 @@ func (t *Tabulate) Print(o io.Writer) {
 	}
 }
 
-func (t *Tabulate) PrintColumn(o io.Writer, col Column, idx, line, width int) {
+func (t *Tabulate) PrintColumn(o io.Writer, col Column,
+	idx, line, width, height int) {
 
-	lPad := t.Padding / 2
-	rPad := t.Padding - lPad
+	vspace := height - col.Height()
+	switch col.VAlign {
+	case Top:
 
-	content := col.Content(line)
+	case Middle:
+		line -= vspace / 2
+
+	case Bottom:
+		line -= vspace
+	}
+
+	var content string
+	if line >= 0 {
+		content = col.Content(line)
+	}
 	if t.Escape != nil {
 		content = t.Escape(content)
 	}
 
+	lPad := t.Padding / 2
+	rPad := t.Padding - lPad
+
 	pad := width - len([]rune(content))
 	switch col.Align {
-	case AlignNone:
+	case None:
 		lPad = 0
 		rPad = 0
 
-	case AlignLeft:
+	case Left:
 		rPad += pad
 
-	case AlignCenter:
+	case Center:
 		l := pad / 2
 		r := pad - l
 		lPad += l
 		rPad += r
 
-	case AlignRight:
+	case Right:
 		lPad += pad
 	}
 
@@ -338,14 +371,18 @@ func (r *Row) Column(data Data) {
 
 	r.Columns = append(r.Columns, Column{
 		Align:  hdr.Align,
+		VAlign: hdr.VAlign,
 		Data:   data,
 		Format: hdr.Format,
 	})
 }
 
-func (r *Row) ColumnAttrs(align Align, data Data, format Format) {
+func (r *Row) ColumnAttrs(align Align, valign VAlign, data Data,
+	format Format) {
+
 	r.Columns = append(r.Columns, Column{
 		Align:  align,
+		VAlign: valign,
 		Data:   data,
 		Format: format,
 	})
@@ -353,6 +390,7 @@ func (r *Row) ColumnAttrs(align Align, data Data, format Format) {
 
 type Column struct {
 	Align  Align
+	VAlign VAlign
 	Data   Data
 	Format Format
 }
@@ -364,21 +402,19 @@ func (col Column) Width() int {
 	return col.Data.Width()
 }
 
+func (col Column) Height() int {
+	if col.Data == nil {
+		return 0
+	}
+	return col.Data.Height()
+}
+
 func (col Column) Content(row int) string {
 	if col.Data == nil {
 		return ""
 	}
 	return col.Data.Content(row)
 }
-
-type Align int
-
-const (
-	AlignNone Align = iota
-	AlignLeft
-	AlignCenter
-	AlignRight
-)
 
 type Data interface {
 	Width() int

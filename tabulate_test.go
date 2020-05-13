@@ -30,9 +30,9 @@ type Info struct {
 }
 
 func TestReflect(t *testing.T) {
-	tab := NewTabulateUnicode()
-	tab.Header(AlignLeft, NewText("Field"))
-	tab.Header(AlignLeft, NewText("Value"))
+	tab := NewUnicode()
+	tab.Header(Left, Middle, NewText("Field"))
+	tab.Header(Left, Middle, NewText("Value"))
 
 	err := Reflect(tab, &Outer{
 		Name: "Alyssa P. Hacker",
@@ -57,9 +57,11 @@ var data = `Year,Income,Expenses
 2019,110,85
 2020,107,50`
 
-func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
+func tabulateRows(tab *Tabulate, align Align, valign VAlign,
+	rows []string) *Tabulate {
+
 	for _, hdr := range strings.Split(rows[0], ",") {
-		tab.Header(align, NewText(hdr))
+		tab.Header(align, valign, NewText(hdr))
 	}
 
 	for i := 1; i < len(rows); i++ {
@@ -71,21 +73,21 @@ func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 	return tab
 }
 
-func tabulate(tab *Tabulate, align Align) *Tabulate {
-	return tabulateRows(tab, align, strings.Split(data, "\n"))
+func tabulate(tab *Tabulate, align Align, valign VAlign) *Tabulate {
+	return tabulateRows(tab, align, valign, strings.Split(data, "\n"))
 }
 
-func align(align Align) {
-	tabulate(NewTabulateWS(), align).Print(os.Stdout)
-	tabulate(NewTabulateASCII(), align).Print(os.Stdout)
-	tabulate(NewTabulateUnicode(), align).Print(os.Stdout)
-	tabulate(NewTabulateColon(), align).Print(os.Stdout)
+func align(align Align, valign VAlign) {
+	tabulate(NewWS(), align, valign).Print(os.Stdout)
+	tabulate(NewASCII(), align, valign).Print(os.Stdout)
+	tabulate(NewUnicode(), align, valign).Print(os.Stdout)
+	tabulate(NewColon(), align, valign).Print(os.Stdout)
 }
 
 func TestBorders(t *testing.T) {
-	align(AlignLeft)
-	align(AlignCenter)
-	align(AlignRight)
+	align(Left, Top)
+	align(Center, Middle)
+	align(Right, Bottom)
 }
 
 var csv = `Year,Income,Source|2018,100,Salary|2019,110,"Consultation"|2020,120,Lottery
@@ -93,14 +95,14 @@ et al`
 
 func TestCSV(t *testing.T) {
 	rows := strings.Split(csv, "|")
-	tabulateRows(NewTabulateCSV(), AlignNone, rows).Print(os.Stdout)
+	tabulateRows(NewCSV(), None, Top, rows).Print(os.Stdout)
 }
 
 func TestNested(t *testing.T) {
-	tab := NewTabulateUnicode()
+	tab := NewUnicode()
 
-	tab.Header(AlignRight, NewLines("Key"))
-	tab.Header(AlignCenter, NewLines("Value"))
+	tab.Header(Right, Middle, NewLines("Key"))
+	tab.Header(Center, Middle, NewLines("Value"))
 
 	row := tab.Row()
 	row.Column(NewLines("Name"))
@@ -108,7 +110,7 @@ func TestNested(t *testing.T) {
 
 	row = tab.Row()
 	row.Column(NewLines("Numbers"))
-	row.Column(tabulate(NewTabulateUnicode(), AlignRight).Data())
+	row.Column(tabulate(NewUnicode(), Right, Top).Data())
 
 	tab.Print(os.Stdout)
 }

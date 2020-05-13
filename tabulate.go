@@ -305,6 +305,15 @@ func (t *Tabulate) Data() Data {
 	return NewLines(builder.String())
 }
 
+func (t *Tabulate) Clone() *Tabulate {
+	return &Tabulate{
+		Padding: t.Padding,
+		Border:  t.Border,
+		Escape:  t.Escape,
+		Headers: t.Headers,
+	}
+}
+
 type Row struct {
 	Tab     *Tabulate
 	Columns []Column

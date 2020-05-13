@@ -12,6 +12,46 @@ import (
 	"testing"
 )
 
+type Outer struct {
+	Name    string
+	Age     int
+	Address *Address
+	Info    Info
+}
+
+type Address struct {
+	Street string
+	Zip    string
+}
+
+type Info struct {
+	Email     string
+	Permanent bool
+}
+
+func TestReflect(t *testing.T) {
+	tab := NewTabulateUnicode()
+	tab.Header(AlignLeft, NewText("Field"))
+	tab.Header(AlignLeft, NewText("Value"))
+
+	err := Reflect(tab, &Outer{
+		Name: "Alyssa P. Hacker",
+		Age:  45,
+		Address: &Address{
+			Street: "Hacker way",
+			Zip:    "02139",
+		},
+		Info: Info{
+			Email: "mtr@iki.fi",
+		},
+	})
+	if err != nil {
+		t.Fatalf("Reflect failed: %s", err)
+	}
+
+	tab.Print(os.Stdout)
+}
+
 var data = `Year,Income,Expenses
 2018,100,90
 2019,110,85

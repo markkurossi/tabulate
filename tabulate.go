@@ -14,7 +14,9 @@ import (
 
 type Border struct {
 	H  string
-	V  string
+	VL string
+	VM string
+	VR string
 	TL string
 	TM string
 	TR string
@@ -30,7 +32,9 @@ var WhiteSpace = Border{}
 
 var ASCII = Border{
 	H:  "-",
-	V:  "|",
+	VL: "|",
+	VM: "|",
+	VR: "|",
 	TL: "+",
 	TM: "+",
 	TR: "+",
@@ -44,7 +48,9 @@ var ASCII = Border{
 
 var Unicode = Border{
 	H:  "\u2501",
-	V:  "\u2503",
+	VL: "\u2503",
+	VM: "\u2503",
+	VR: "\u2503",
 	TL: "\u250F",
 	TM: "\u2533",
 	TR: "\u2513",
@@ -56,12 +62,24 @@ var Unicode = Border{
 	BR: "\u251B",
 }
 
+var Colon = Border{
+	VM: " : ",
+}
+
+var CSV = Border{
+	VM: ",",
+	VR: "\r",
+}
+
 type Tabulate struct {
 	Padding int
 	Border  Border
+	Escape  Escape
 	Headers []Column
 	Rows    []*Row
 }
+
+type Escape func(string) string
 
 func NewTabulateWS() *Tabulate {
 	return &Tabulate{
@@ -81,6 +99,42 @@ func NewTabulateUnicode() *Tabulate {
 	return &Tabulate{
 		Padding: 2,
 		Border:  Unicode,
+	}
+}
+
+func NewTabulateColon() *Tabulate {
+	return &Tabulate{
+		Padding: 0,
+		Border:  Colon,
+	}
+}
+
+func escapeCSV(val string) string {
+	idxQuote := strings.IndexRune(val, '"')
+	idxNewline := strings.IndexRune(val, '\n')
+
+	if idxQuote < 0 && idxNewline < 0 {
+		return val
+	}
+
+	var runes []rune
+	runes = append(runes, '"')
+	for _, r := range []rune(val) {
+		if r == '"' {
+			runes = append(runes, '"')
+		}
+		runes = append(runes, r)
+	}
+	runes = append(runes, '"')
+
+	return string(runes)
+}
+
+func NewTabulateCSV() *Tabulate {
+	return &Tabulate{
+		Padding: 0,
+		Border:  CSV,
+		Escape:  escapeCSV,
 	}
 }
 
@@ -146,9 +200,9 @@ func (t *Tabulate) Print(o io.Writer) {
 			if idx < len(t.Headers) {
 				hdr = t.Headers[idx]
 			}
-			t.PrintColumn(o, hdr, line, width)
+			t.PrintColumn(o, hdr, idx, line, width)
 		}
-		fmt.Fprintln(o, t.Border.V)
+		fmt.Fprintln(o, t.Border.VR)
 	}
 
 	if len(t.Border.H) > 0 {
@@ -175,9 +229,9 @@ func (t *Tabulate) Print(o io.Writer) {
 				if idx < len(row.Columns) {
 					col = row.Columns[idx]
 				}
-				t.PrintColumn(o, col, line, width)
+				t.PrintColumn(o, col, idx, line, width)
 			}
-			fmt.Fprintln(o, t.Border.V)
+			fmt.Fprintln(o, t.Border.VR)
 		}
 	}
 
@@ -196,15 +250,22 @@ func (t *Tabulate) Print(o io.Writer) {
 	}
 }
 
-func (t *Tabulate) PrintColumn(o io.Writer, col Column, line, width int) {
+func (t *Tabulate) PrintColumn(o io.Writer, col Column, idx, line, width int) {
 
 	lPad := t.Padding / 2
 	rPad := t.Padding - lPad
 
 	content := col.Content(line)
+	if t.Escape != nil {
+		content = t.Escape(content)
+	}
 
 	pad := width - len([]rune(content))
 	switch col.Align {
+	case AlignNone:
+		lPad = 0
+		rPad = 0
+
 	case AlignLeft:
 		rPad += pad
 
@@ -218,7 +279,11 @@ func (t *Tabulate) PrintColumn(o io.Writer, col Column, line, width int) {
 		lPad += pad
 	}
 
-	fmt.Fprint(o, t.Border.V)
+	if idx == 0 {
+		fmt.Fprint(o, t.Border.VL)
+	} else {
+		fmt.Fprint(o, t.Border.VM)
+	}
 	for i := 0; i < lPad; i++ {
 		fmt.Fprint(o, " ")
 	}
@@ -300,7 +365,8 @@ func (col Column) Content(row int) string {
 type Align int
 
 const (
-	AlignLeft Align = iota
+	AlignNone Align = iota
+	AlignLeft
 	AlignCenter
 	AlignRight
 )
@@ -330,6 +396,13 @@ func NewLines(str string) *Lines {
 	return &Lines{
 		MaxWidth: max,
 		Lines:    lines,
+	}
+}
+
+func NewText(str string) *Lines {
+	return &Lines{
+		MaxWidth: len([]rune(str)),
+		Lines:    []string{str},
 	}
 }
 

@@ -6,6 +6,7 @@
 
 package tabulate
 
+// Format specifies text formatting.
 type Format int
 
 const (
@@ -14,6 +15,8 @@ const (
 	FmtItalic
 )
 
+// VT100 creates VT100 terminal emulation codes for the agument
+// format.
 func (fmt Format) VT100() string {
 	switch fmt {
 	case FmtBold:

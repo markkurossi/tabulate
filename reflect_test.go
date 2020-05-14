@@ -13,9 +13,10 @@ import (
 
 type Outer struct {
 	Name    string
+	Comment string `tabulate:"@detail"`
 	Age     int
-	Address *Address
-	Info    []Info
+	Address *Address `tabulate:"omitempty"`
+	Info    []*Info
 }
 
 type Address struct {
@@ -27,22 +28,32 @@ type Info struct {
 	Work  bool
 }
 
-func TestReflect(t *testing.T) {
+func reflectTest(flags Flags, tags []string, v interface{}) error {
 	tab := NewUnicode()
 	tab.Header("Field").SetAlign(MR)
 	tab.Header("Value").SetAlign(ML)
 
-	err := Reflect(tab, &Outer{
+	err := Reflect(tab, flags, tags, v)
+	if err != nil {
+		return err
+	}
+
+	tab.Print(os.Stdout)
+	return nil
+}
+
+func TestReflect(t *testing.T) {
+	err := reflectTest(OmitEmpty, nil, &Outer{
 		Name: "Alyssa P. Hacker",
 		Age:  45,
 		Address: &Address{
 			Lines: []string{"42 Hacker way", "03139 Cambridge", "MA"},
 		},
-		Info: []Info{
-			Info{
+		Info: []*Info{
+			&Info{
 				Email: "mtr@iki.fi",
 			},
-			Info{
+			&Info{
 				Email: "markku.rossi@gmail.com",
 				Work:  true,
 			},
@@ -52,5 +63,25 @@ func TestReflect(t *testing.T) {
 		t.Fatalf("Reflect failed: %s", err)
 	}
 
-	tab.Print(os.Stdout)
+	data := &Outer{
+		Name:    "Alyssa P. Hacker",
+		Comment: "Structure and Interpretation of Computer Programs",
+		Age:     45,
+		Info: []*Info{
+			nil,
+			&Info{
+				Email: "markku.rossi@gmail.com",
+				Work:  true,
+			},
+		},
+	}
+
+	err = reflectTest(OmitEmpty, nil, data)
+	if err != nil {
+		t.Fatalf("Reflect failed: %s", err)
+	}
+	err = reflectTest(0, []string{"detail"}, data)
+	if err != nil {
+		t.Fatalf("Reflect failed: %s", err)
+	}
 }

@@ -9,9 +9,21 @@ package tabulate
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
-func Reflect(tab *Tabulate, v interface{}) error {
+type Flags int
+
+const (
+	OmitEmpty Flags = 1 << iota
+)
+
+func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
+	tagMap := make(map[string]bool)
+	for _, tag := range tags {
+		tagMap[tag] = true
+	}
+
 	value := reflect.ValueOf(v)
 
 	// Follows pointers.
@@ -23,10 +35,10 @@ func Reflect(tab *Tabulate, v interface{}) error {
 	}
 
 	if value.Type().Kind() == reflect.Struct {
-		return reflectStruct(tab, value)
+		return reflectStruct(tab, flags, tagMap, value)
 	}
 
-	lines, err := reflectValue(tab, value)
+	lines, err := reflectValue(tab, flags, tagMap, value)
 	if err != nil {
 		return err
 	}
@@ -37,7 +49,8 @@ func Reflect(tab *Tabulate, v interface{}) error {
 	return nil
 }
 
-func reflectValue(tab *Tabulate, value reflect.Value) ([]string, error) {
+func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
+	value reflect.Value) ([]string, error) {
 	var text string
 
 	switch value.Type().Kind() {
@@ -59,14 +72,17 @@ func reflectValue(tab *Tabulate, value reflect.Value) ([]string, error) {
 			// Follow pointers.
 			for v.Type().Kind() == reflect.Ptr {
 				if v.IsZero() {
-					lines = append(lines, "<nil>")
+					if flags&OmitEmpty == 0 {
+						lines = append(lines, "<nil>")
+					}
 					continue loop
 				}
+				v = reflect.Indirect(v)
 			}
 			switch v.Type().Kind() {
 			case reflect.Struct:
 				sub := tab.Clone()
-				err := reflectStruct(sub, v)
+				err := reflectStruct(sub, flags, tags, v)
 				if err != nil {
 					return nil, err
 				}
@@ -76,7 +92,7 @@ func reflectValue(tab *Tabulate, value reflect.Value) ([]string, error) {
 				}
 
 			default:
-				l, err := reflectValue(tab, v)
+				l, err := reflectValue(tab, flags, tags, v)
 				if err != nil {
 					return nil, err
 				}
@@ -89,19 +105,42 @@ func reflectValue(tab *Tabulate, value reflect.Value) ([]string, error) {
 		text = value.String()
 	}
 
+	if len(text) == 0 && flags&OmitEmpty == 1 {
+		return nil, nil
+	}
+
 	return []string{text}, nil
 }
 
-func reflectStruct(tab *Tabulate, value reflect.Value) error {
+func reflectStruct(tab *Tabulate, flags Flags, tags map[string]bool,
+	value reflect.Value) error {
+
+loop:
 	for i := 0; i < value.NumField(); i++ {
-		// XXX Tags
+		field := value.Type().Field(i)
+
+		myFlags := flags
+		for _, tag := range strings.Split(field.Tag.Get("tabulate"), ",") {
+			if tag == "omitempty" {
+				myFlags |= OmitEmpty
+			} else if strings.HasPrefix(tag, "@") {
+				// Tagged field. Skip unless filter tags contain it.
+				if !tags[tag[1:]] {
+					continue loop
+				}
+			}
+		}
 
 		v := value.Field(i)
 
 		// Follow pointers.
 		for v.Type().Kind() == reflect.Ptr {
 			if v.IsZero() {
-				continue
+				if myFlags&OmitEmpty == 0 {
+					row := tab.Row()
+					row.Column(field.Name)
+				}
+				continue loop
 			}
 			v = reflect.Indirect(v)
 		}
@@ -111,22 +150,24 @@ func reflectStruct(tab *Tabulate, value reflect.Value) error {
 		switch v.Type().Kind() {
 		case reflect.Struct:
 			sub := tab.Clone()
-			err = reflectStruct(sub, v)
+			err = reflectStruct(sub, flags, tags, v)
 			if err != nil {
 				return err
 			}
 			row := tab.Row()
-			row.Column(value.Type().Field(i).Name)
+			row.Column(field.Name)
 			row.ColumnData(sub.Data())
 
 		default:
-			lines, err := reflectValue(tab, v)
+			lines, err := reflectValue(tab, flags, tags, v)
 			if err != nil {
 				return err
 			}
-			row := tab.Row()
-			row.Column(value.Type().Field(i).Name)
-			row.ColumnData(NewLinesData(lines))
+			if len(lines) > 0 || flags&OmitEmpty == 0 {
+				row := tab.Row()
+				row.Column(field.Name)
+				row.ColumnData(NewLinesData(lines))
+			}
 		}
 	}
 	return nil

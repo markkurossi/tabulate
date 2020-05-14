@@ -15,18 +15,16 @@ import (
 type Align int
 
 const (
-	Left Align = iota
-	Center
-	Right
+	TL Align = iota
+	TC
+	TR
+	ML
+	MC
+	MR
+	BL
+	BC
+	BR
 	None
-)
-
-type VAlign int
-
-const (
-	Top VAlign = iota
-	Middle
-	Bottom
 )
 
 type Border struct {
@@ -92,7 +90,7 @@ type Tabulate struct {
 	Padding int
 	Border  Border
 	Escape  Escape
-	Headers []Column
+	Headers []*Column
 	Rows    []*Row
 }
 
@@ -155,13 +153,16 @@ func NewCSV() *Tabulate {
 	}
 }
 
-func (t *Tabulate) Header(align Align, valign VAlign, data Data) *Tabulate {
-	t.Headers = append(t.Headers, Column{
-		Align:  align,
-		VAlign: valign,
-		Data:   data,
-	})
-	return t
+func (t *Tabulate) Header(label string) *Column {
+	return t.HeaderData(NewLines(label))
+}
+
+func (t *Tabulate) HeaderData(data Data) *Column {
+	col := &Column{
+		Data: data,
+	}
+	t.Headers = append(t.Headers, col)
+	return col
 }
 
 func (t *Tabulate) Row() *Row {
@@ -214,9 +215,11 @@ func (t *Tabulate) Print(o io.Writer) {
 	}
 	for line := 0; line < height; line++ {
 		for idx, width := range widths {
-			var hdr Column
+			var hdr *Column
 			if idx < len(t.Headers) {
 				hdr = t.Headers[idx]
+			} else {
+				hdr = &Column{}
 			}
 			t.PrintColumn(o, hdr, idx, line, width, height)
 		}
@@ -243,9 +246,11 @@ func (t *Tabulate) Print(o io.Writer) {
 
 		for line := 0; line < height; line++ {
 			for idx, width := range widths {
-				var col Column
+				var col *Column
 				if idx < len(row.Columns) {
 					col = row.Columns[idx]
+				} else {
+					col = &Column{}
 				}
 				t.PrintColumn(o, col, idx, line, width, height)
 			}
@@ -268,17 +273,17 @@ func (t *Tabulate) Print(o io.Writer) {
 	}
 }
 
-func (t *Tabulate) PrintColumn(o io.Writer, col Column,
+func (t *Tabulate) PrintColumn(o io.Writer, col *Column,
 	idx, line, width, height int) {
 
 	vspace := height - col.Height()
-	switch col.VAlign {
-	case Top:
+	switch col.Align {
+	case TL, TC, TR, None:
 
-	case Middle:
+	case ML, MC, MR:
 		line -= vspace / 2
 
-	case Bottom:
+	case BL, BC, BR:
 		line -= vspace
 	}
 
@@ -299,16 +304,16 @@ func (t *Tabulate) PrintColumn(o io.Writer, col Column,
 		lPad = 0
 		rPad = 0
 
-	case Left:
+	case TL, ML, BL:
 		rPad += pad
 
-	case Center:
+	case TC, MC, BC:
 		l := pad / 2
 		r := pad - l
 		lPad += l
 		rPad += r
 
-	case Right:
+	case TR, MR, BR:
 		lPad += pad
 	}
 
@@ -349,7 +354,7 @@ func (t *Tabulate) Clone() *Tabulate {
 
 type Row struct {
 	Tab     *Tabulate
-	Columns []Column
+	Columns []*Column
 }
 
 func (r *Row) Height() int {
@@ -362,54 +367,60 @@ func (r *Row) Height() int {
 	return max
 }
 
-func (r *Row) Column(data Data) {
-	idx := len(r.Columns)
-	var hdr Column
-	if idx < len(r.Tab.Headers) {
-		hdr = r.Tab.Headers[idx]
-	}
-
-	r.Columns = append(r.Columns, Column{
-		Align:  hdr.Align,
-		VAlign: hdr.VAlign,
-		Data:   data,
-		Format: hdr.Format,
-	})
+func (r *Row) Column(label string) *Column {
+	return r.ColumnData(NewLines(label))
 }
 
-func (r *Row) ColumnAttrs(align Align, valign VAlign, data Data,
-	format Format) {
+func (r *Row) ColumnData(data Data) *Column {
+	idx := len(r.Columns)
+	var hdr *Column
+	if idx < len(r.Tab.Headers) {
+		hdr = r.Tab.Headers[idx]
+	} else {
+		hdr = &Column{}
+	}
 
-	r.Columns = append(r.Columns, Column{
-		Align:  align,
-		VAlign: valign,
+	col := &Column{
+		Align:  hdr.Align,
 		Data:   data,
-		Format: format,
-	})
+		Format: hdr.Format,
+	}
+
+	r.Columns = append(r.Columns, col)
+	return col
 }
 
 type Column struct {
 	Align  Align
-	VAlign VAlign
 	Data   Data
 	Format Format
 }
 
-func (col Column) Width() int {
+func (col *Column) SetAlign(align Align) *Column {
+	col.Align = align
+	return col
+}
+
+func (col *Column) SetFormat(format Format) *Column {
+	col.Format = format
+	return col
+}
+
+func (col *Column) Width() int {
 	if col.Data == nil {
 		return 0
 	}
 	return col.Data.Width()
 }
 
-func (col Column) Height() int {
+func (col *Column) Height() int {
 	if col.Data == nil {
 		return 0
 	}
 	return col.Data.Height()
 }
 
-func (col Column) Content(row int) string {
+func (col *Column) Content(row int) string {
 	if col.Data == nil {
 		return ""
 	}
@@ -428,8 +439,10 @@ type Lines struct {
 }
 
 func NewLines(str string) *Lines {
-	lines := strings.Split(strings.TrimRight(str, "\n"), "\n")
+	return NewLinesData(strings.Split(strings.TrimRight(str, "\n"), "\n"))
+}
 
+func NewLinesData(lines []string) *Lines {
 	var max int
 	for _, line := range lines {
 		l := len([]rune(line))

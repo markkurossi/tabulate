@@ -12,12 +12,19 @@ import (
 	"strings"
 )
 
+// Flags control how reflection tabulation operates on different
+// values.
 type Flags int
 
+// Flag values for reflection tabulation.
 const (
 	OmitEmpty Flags = 1 << iota
 )
 
+// Reflect tabulates the value into the tabulation object. The flags
+// control how different values are handled. The tags lists element
+// tags which are included in reflection. If the element does not have
+// tabulation tag, then it is always included in tabulation.
 func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
 	tagMap := make(map[string]bool)
 	for _, tag := range tags {

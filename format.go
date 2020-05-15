@@ -9,6 +9,7 @@ package tabulate
 // Format specifies text formatting.
 type Format int
 
+// Format values specify various VT100 text formatting codes.
 const (
 	FmtNone Format = iota
 	FmtBold

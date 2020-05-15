@@ -20,6 +20,7 @@ type Outer struct {
 	Age     int
 	Address *Address `tabulate:"omitempty"`
 	Info    []*Info
+	Mapping map[string]string
 }
 
 type Address struct {
@@ -60,6 +61,10 @@ func TestReflect(t *testing.T) {
 				Email: "markku.rossi@gmail.com",
 				Work:  true,
 			},
+		},
+		Mapping: map[string]string{
+			"First":  "1st",
+			"Second": "2nd",
 		},
 	})
 	if err != nil {

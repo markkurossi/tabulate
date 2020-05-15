@@ -191,6 +191,26 @@ loop:
 			row.Column(field.Name)
 			row.ColumnData(sub.Data())
 
+		case reflect.Map:
+			iter := v.MapRange()
+			sub := tab.Clone()
+			for iter.Next() {
+				row := sub.Row()
+				lines, err := reflectValue(tab, flags, tags, iter.Key())
+				if err != nil {
+					return err
+				}
+				row.ColumnData(NewLinesData(lines))
+				lines, err = reflectValue(tab, flags, tags, iter.Value())
+				if err != nil {
+					return err
+				}
+				row.ColumnData(NewLinesData(lines))
+			}
+			row := tab.Row()
+			row.Column(field.Name)
+			row.ColumnData(sub.Data())
+
 		default:
 			lines, err := reflectValue(tab, flags, tags, v)
 			if err != nil {

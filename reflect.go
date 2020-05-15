@@ -61,13 +61,15 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	value reflect.Value) ([]string, error) {
 	var text string
 
-	switch v := value.Interface().(type) {
-	case encoding.TextMarshaler:
-		data, err := v.MarshalText()
-		if err != nil {
-			return nil, err
+	if value.CanInterface() {
+		switch v := value.Interface().(type) {
+		case encoding.TextMarshaler:
+			data, err := v.MarshalText()
+			if err != nil {
+				return nil, err
+			}
+			return []string{string(data)}, nil
 		}
-		return []string{string(data)}, nil
 	}
 
 	switch value.Type().Kind() {
@@ -162,41 +164,45 @@ loop:
 			v = reflect.Indirect(v)
 		}
 
-		var err error
-		switch iv := v.Interface().(type) {
-		case encoding.TextMarshaler:
-			data, err := iv.MarshalText()
-			if err != nil {
-				return err
-			}
-			row := tab.Row()
-			row.Column(field.Name)
-			row.Column(string(data))
-
-		default:
-			switch v.Type().Kind() {
-			case reflect.Struct:
-				sub := tab.Clone()
-				err = reflectStruct(sub, flags, tags, v)
+		if v.CanInterface() {
+			switch iv := v.Interface().(type) {
+			case encoding.TextMarshaler:
+				data, err := iv.MarshalText()
 				if err != nil {
 					return err
 				}
 				row := tab.Row()
 				row.Column(field.Name)
-				row.ColumnData(sub.Data())
-
-			default:
-				lines, err := reflectValue(tab, flags, tags, v)
-				if err != nil {
-					return err
-				}
-				if len(lines) > 0 || flags&OmitEmpty == 0 {
-					row := tab.Row()
-					row.Column(field.Name)
-					row.ColumnData(NewLinesData(lines))
-				}
+				row.Column(string(data))
+				continue loop
 			}
 		}
+
+		var err error
+
+		switch v.Type().Kind() {
+		case reflect.Struct:
+			sub := tab.Clone()
+			err = reflectStruct(sub, flags, tags, v)
+			if err != nil {
+				return err
+			}
+			row := tab.Row()
+			row.Column(field.Name)
+			row.ColumnData(sub.Data())
+
+		default:
+			lines, err := reflectValue(tab, flags, tags, v)
+			if err != nil {
+				return err
+			}
+			if len(lines) > 0 || flags&OmitEmpty == 0 {
+				row := tab.Row()
+				row.Column(field.Name)
+				row.ColumnData(NewLinesData(lines))
+			}
+		}
+
 	}
 	return nil
 }

@@ -7,6 +7,7 @@
 package tabulate
 
 import (
+	"encoding"
 	"fmt"
 	"reflect"
 	"strings"
@@ -59,6 +60,15 @@ func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
 func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	value reflect.Value) ([]string, error) {
 	var text string
+
+	switch v := value.Interface().(type) {
+	case encoding.TextMarshaler:
+		data, err := v.MarshalText()
+		if err != nil {
+			return nil, err
+		}
+		return []string{string(data)}, nil
+	}
 
 	switch value.Type().Kind() {
 	case reflect.Bool:
@@ -153,27 +163,38 @@ loop:
 		}
 
 		var err error
-
-		switch v.Type().Kind() {
-		case reflect.Struct:
-			sub := tab.Clone()
-			err = reflectStruct(sub, flags, tags, v)
+		switch iv := v.Interface().(type) {
+		case encoding.TextMarshaler:
+			data, err := iv.MarshalText()
 			if err != nil {
 				return err
 			}
 			row := tab.Row()
 			row.Column(field.Name)
-			row.ColumnData(sub.Data())
+			row.Column(string(data))
 
 		default:
-			lines, err := reflectValue(tab, flags, tags, v)
-			if err != nil {
-				return err
-			}
-			if len(lines) > 0 || flags&OmitEmpty == 0 {
+			switch v.Type().Kind() {
+			case reflect.Struct:
+				sub := tab.Clone()
+				err = reflectStruct(sub, flags, tags, v)
+				if err != nil {
+					return err
+				}
 				row := tab.Row()
 				row.Column(field.Name)
-				row.ColumnData(NewLinesData(lines))
+				row.ColumnData(sub.Data())
+
+			default:
+				lines, err := reflectValue(tab, flags, tags, v)
+				if err != nil {
+					return err
+				}
+				if len(lines) > 0 || flags&OmitEmpty == 0 {
+					row := tab.Row()
+					row.Column(field.Name)
+					row.ColumnData(NewLinesData(lines))
+				}
 			}
 		}
 	}

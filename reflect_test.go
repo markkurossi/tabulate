@@ -7,6 +7,7 @@
 package tabulate
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -81,6 +82,33 @@ func TestReflect(t *testing.T) {
 		t.Fatalf("Reflect failed: %s", err)
 	}
 	err = reflectTest(0, []string{"detail"}, data)
+	if err != nil {
+		t.Fatalf("Reflect failed: %s", err)
+	}
+}
+
+type Outer2 struct {
+	Name  string
+	Inner *Inner
+}
+
+type Inner struct {
+	A int
+	B int
+}
+
+func (in Inner) MarshalText() (text []byte, err error) {
+	return []byte(fmt.Sprintf("A=%v, B=%v", in.A, in.B)), nil
+}
+
+func TestReflectTextMarshaler(t *testing.T) {
+	err := reflectTest(0, nil, &Outer2{
+		Name: "ACME Corp.",
+		Inner: &Inner{
+			A: 100,
+			B: 42,
+		},
+	})
 	if err != nil {
 		t.Fatalf("Reflect failed: %s", err)
 	}

@@ -62,13 +62,13 @@ func ExampleReflect() {
 	err := Reflect(tab, 0, nil, &Book{
 		Title: "Structure and Interpretation of Computer Programs",
 		Author: []Person{
-			Person{
+			{
 				Name: "Harold Abelson",
 			},
-			Person{
+			{
 				Name: "Gerald Jay Sussman",
 			},
-			Person{
+			{
 				Name: "Julie Sussman",
 			},
 		},

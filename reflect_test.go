@@ -54,10 +54,10 @@ func TestReflect(t *testing.T) {
 			Lines: []string{"42 Hacker way", "03139 Cambridge", "MA"},
 		},
 		Info: []*Info{
-			&Info{
+			{
 				Email: "mtr@iki.fi",
 			},
-			&Info{
+			{
 				Email: "markku.rossi@gmail.com",
 				Work:  true,
 			},
@@ -77,7 +77,7 @@ func TestReflect(t *testing.T) {
 		Age:     45,
 		Info: []*Info{
 			nil,
-			&Info{
+			{
 				Email: "markku.rossi@gmail.com",
 				Work:  true,
 			},

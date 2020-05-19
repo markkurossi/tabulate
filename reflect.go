@@ -10,6 +10,7 @@ import (
 	"encoding"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -45,6 +46,9 @@ func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
 	if value.Type().Kind() == reflect.Struct {
 		return reflectStruct(tab, flags, tagMap, value)
 	}
+	if value.Type().Kind() == reflect.Map {
+		return reflectMap(tab, flags, tagMap, value)
+	}
 
 	lines, err := reflectValue(tab, flags, tagMap, value)
 	if err != nil {
@@ -72,6 +76,17 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		}
 	}
 
+	// Resolve interfaces.
+	for value.Type().Kind() == reflect.Interface {
+		if value.IsZero() {
+			if flags&OmitEmpty == 0 {
+				return []string{"<nil>"}, nil
+			}
+			return nil, nil
+		}
+		value = value.Elem()
+	}
+
 	switch value.Type().Kind() {
 	case reflect.Bool:
 		text = fmt.Sprintf("%v", value.Bool())
@@ -82,6 +97,30 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
 		reflect.Uint64:
 		text = fmt.Sprintf("%v", value.Uint())
+
+	case reflect.Map:
+		var lines []string
+
+		if value.Len() > 0 || flags&OmitEmpty == 0 {
+			sub := tab.Clone()
+			err := reflectMap(sub, flags, tags, value)
+			if err != nil {
+				return nil, err
+			}
+			data := sub.Data()
+			for row := 0; row < data.Height(); row++ {
+				lines = append(lines, data.Content(row))
+			}
+		}
+		return lines, nil
+
+	case reflect.String:
+		text := value.String()
+		lines := strings.Split(strings.TrimRight(text, "\n"), "\n")
+		if len(lines) == 0 && flags&OmitEmpty == 1 {
+			return nil, nil
+		}
+		return lines, nil
 
 	case reflect.Slice:
 		var lines []string
@@ -129,6 +168,64 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	}
 
 	return []string{text}, nil
+}
+
+type row struct {
+	key Data
+	val Data
+}
+
+func reflectMap(tab *Tabulate, flags Flags, tags map[string]bool,
+	v reflect.Value) error {
+
+	var rows []row
+	iter := v.MapRange()
+	for iter.Next() {
+		keyLines, err := reflectValue(tab, flags, tags, iter.Key())
+		if err != nil {
+			return err
+		}
+		valLines, err := reflectValue(tab, flags, tags, iter.Value())
+		if err != nil {
+			return err
+		}
+		rows = append(rows, row{
+			key: NewLinesData(keyLines),
+			val: NewLinesData(valLines),
+		})
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		di := rows[i].key
+		dj := rows[j].key
+
+		height := di.Height()
+		if dj.Height() < height {
+			height = dj.Height()
+		}
+
+		for row := 0; row < height; row++ {
+			cmp := strings.Compare(di.Content(row), dj.Content(row))
+			switch cmp {
+			case -1:
+				return true
+			case 1:
+				return false
+			}
+		}
+		if di.Height() <= dj.Height() {
+			return true
+		}
+		return false
+	})
+
+	for _, r := range rows {
+		row := tab.Row()
+		row.ColumnData(r.key)
+		row.ColumnData(r.val)
+	}
+
+	return nil
 }
 
 func reflectStruct(tab *Tabulate, flags Flags, tags map[string]bool,
@@ -192,24 +289,16 @@ loop:
 			row.ColumnData(sub.Data())
 
 		case reflect.Map:
-			iter := v.MapRange()
-			sub := tab.Clone()
-			for iter.Next() {
-				row := sub.Row()
-				lines, err := reflectValue(tab, flags, tags, iter.Key())
+			if v.Len() > 0 || flags&OmitEmpty == 0 {
+				sub := tab.Clone()
+				err = reflectMap(sub, flags, tags, v)
 				if err != nil {
 					return err
 				}
-				row.ColumnData(NewLinesData(lines))
-				lines, err = reflectValue(tab, flags, tags, iter.Value())
-				if err != nil {
-					return err
-				}
-				row.ColumnData(NewLinesData(lines))
+				row := tab.Row()
+				row.Column(field.Name)
+				row.ColumnData(sub.Data())
 			}
-			row := tab.Row()
-			row.Column(field.Name)
-			row.ColumnData(sub.Data())
 
 		default:
 			lines, err := reflectValue(tab, flags, tags, v)

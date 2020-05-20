@@ -123,41 +123,17 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		return lines, nil
 
 	case reflect.Slice:
-		var lines []string
-	loop:
-		for i := 0; i < value.Len(); i++ {
-			v := value.Index(i)
-			// Follow pointers.
-			for v.Type().Kind() == reflect.Ptr {
-				if v.IsZero() {
-					if flags&OmitEmpty == 0 {
-						lines = append(lines, "<nil>")
-					}
-					continue loop
-				}
-				v = reflect.Indirect(v)
-			}
-			switch v.Type().Kind() {
-			case reflect.Struct:
-				sub := tab.Clone()
-				err := reflectStruct(sub, flags, tags, v)
-				if err != nil {
-					return nil, err
-				}
-				data := sub.Data()
-				for row := 0; row < data.Height(); row++ {
-					lines = append(lines, data.Content(row))
-				}
+		// Check slice element type.
+		switch value.Type().Elem().Kind() {
+		case reflect.Uint8:
+			return reflectByteSliceValue(tab, flags, tags, value)
 
-			default:
-				l, err := reflectValue(tab, flags, tags, v)
-				if err != nil {
-					return nil, err
-				}
-				lines = append(lines, l...)
-			}
+		case reflect.Int:
+			return reflectIntSliceValue(tab, flags, tags, value)
+
+		default:
+			return reflectSliceValue(tab, flags, tags, value)
 		}
-		return lines, nil
 
 	default:
 		text = value.String()
@@ -168,6 +144,89 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	}
 
 	return []string{text}, nil
+}
+
+func reflectByteSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
+	value reflect.Value) ([]string, error) {
+
+	arr, ok := value.Interface().([]byte)
+	if !ok {
+		return nil, fmt.Errorf("reflectByteSliceValue called for %T",
+			value.Type().Kind())
+	}
+
+	const lineLength = 32
+	var lines []string
+	for i := 0; i < len(arr); i += lineLength {
+		l := len(arr) - i
+		if l > lineLength {
+			l = lineLength
+		}
+		lines = append(lines, fmt.Sprintf("%x", arr[i:i+l]))
+	}
+	return lines, nil
+}
+
+func reflectIntSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
+	value reflect.Value) ([]string, error) {
+
+	var lines []string
+	var line string
+	for i := 0; i < value.Len(); i++ {
+		if len(line) > 0 {
+			line += " "
+		}
+		line += fmt.Sprintf("%v", value.Index(i).Int())
+		if len(line) > 40 {
+			lines = append(lines, line)
+			line = ""
+		}
+	}
+	if len(line) > 0 {
+		lines = append(lines, line)
+	}
+	return lines, nil
+}
+
+func reflectSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
+	value reflect.Value) ([]string, error) {
+
+	var lines []string
+loop:
+	for i := 0; i < value.Len(); i++ {
+		v := value.Index(i)
+		// Follow pointers.
+		for v.Type().Kind() == reflect.Ptr {
+			if v.IsZero() {
+				if flags&OmitEmpty == 0 {
+					lines = append(lines, "<nil>")
+				}
+				continue loop
+			}
+			v = reflect.Indirect(v)
+		}
+		switch v.Type().Kind() {
+		case reflect.Struct:
+			sub := tab.Clone()
+			err := reflectStruct(sub, flags, tags, v)
+			if err != nil {
+				return nil, err
+			}
+			data := sub.Data()
+			for row := 0; row < data.Height(); row++ {
+				lines = append(lines, data.Content(row))
+			}
+
+		default:
+			l, err := reflectValue(tab, flags, tags, v)
+			if err != nil {
+				return nil, err
+			}
+			lines = append(lines, l...)
+		}
+	}
+
+	return lines, nil
 }
 
 type row struct {

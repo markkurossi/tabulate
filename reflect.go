@@ -23,6 +23,8 @@ const (
 	OmitEmpty Flags = 1 << iota
 )
 
+const nilLabel = "<nil>"
+
 // Reflect tabulates the value into the tabulation object. The flags
 // control how different values are handled. The tags lists element
 // tags which are included in reflection. If the element does not have
@@ -80,11 +82,21 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	for value.Type().Kind() == reflect.Interface {
 		if value.IsZero() {
 			if flags&OmitEmpty == 0 {
-				return []string{"<nil>"}, nil
+				return []string{nilLabel}, nil
 			}
 			return nil, nil
 		}
 		value = value.Elem()
+	}
+
+	// Follow pointers.
+	for value.Type().Kind() == reflect.Ptr {
+		if value.IsZero() {
+			if flags&OmitEmpty == 0 {
+				return []string{nilLabel}, nil
+			}
+		}
+		value = reflect.Indirect(value)
 	}
 
 	switch value.Type().Kind() {
@@ -134,6 +146,19 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		default:
 			return reflectSliceValue(tab, flags, tags, value)
 		}
+
+	case reflect.Struct:
+		sub := tab.Clone()
+		err := reflectStruct(sub, flags, tags, value)
+		if err != nil {
+			return nil, err
+		}
+		var lines []string
+		data := sub.Data()
+		for row := 0; row < data.Height(); row++ {
+			lines = append(lines, data.Content(row))
+		}
+		return lines, nil
 
 	default:
 		text = value.String()
@@ -199,7 +224,7 @@ loop:
 		for v.Type().Kind() == reflect.Ptr {
 			if v.IsZero() {
 				if flags&OmitEmpty == 0 {
-					lines = append(lines, "<nil>")
+					lines = append(lines, nilLabel)
 				}
 				continue loop
 			}
@@ -334,41 +359,14 @@ loop:
 			}
 		}
 
-		var err error
-
-		switch v.Type().Kind() {
-		case reflect.Struct:
-			sub := tab.Clone()
-			err = reflectStruct(sub, flags, tags, v)
-			if err != nil {
-				return err
-			}
+		lines, err := reflectValue(tab, flags, tags, v)
+		if err != nil {
+			return err
+		}
+		if len(lines) > 0 || flags&OmitEmpty == 0 {
 			row := tab.Row()
 			row.Column(field.Name)
-			row.ColumnData(sub.Data())
-
-		case reflect.Map:
-			if v.Len() > 0 || flags&OmitEmpty == 0 {
-				sub := tab.Clone()
-				err = reflectMap(sub, flags, tags, v)
-				if err != nil {
-					return err
-				}
-				row := tab.Row()
-				row.Column(field.Name)
-				row.ColumnData(sub.Data())
-			}
-
-		default:
-			lines, err := reflectValue(tab, flags, tags, v)
-			if err != nil {
-				return err
-			}
-			if len(lines) > 0 || flags&OmitEmpty == 0 {
-				row := tab.Row()
-				row.Column(field.Name)
-				row.ColumnData(NewLinesData(lines))
-			}
+			row.ColumnData(NewLinesData(lines))
 		}
 
 	}

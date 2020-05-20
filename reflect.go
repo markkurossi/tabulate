@@ -140,7 +140,7 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		case reflect.Uint8:
 			return reflectByteSliceValue(tab, flags, tags, value)
 
-		case reflect.Int:
+		case reflect.Int, reflect.Uint:
 			return reflectIntSliceValue(tab, flags, tags, value)
 
 		default:
@@ -201,7 +201,14 @@ func reflectIntSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		if len(line) > 0 {
 			line += " "
 		}
-		line += fmt.Sprintf("%v", value.Index(i).Int())
+		switch value.Type().Elem().Kind() {
+		case reflect.Int:
+			line += fmt.Sprintf("%v", value.Index(i).Int())
+		case reflect.Uint:
+			line += fmt.Sprintf("%v", value.Index(i).Uint())
+		default:
+			line += value.String()
+		}
 		if len(line) > 40 {
 			lines = append(lines, line)
 			line = ""

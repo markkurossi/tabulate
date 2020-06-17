@@ -478,6 +478,7 @@ type Data interface {
 	Width() int
 	Height() int
 	Content(row int) string
+	String() string
 }
 
 // Lines implements the Data interface over an array of lines.
@@ -533,4 +534,8 @@ func (lines *Lines) Content(row int) string {
 		return ""
 	}
 	return lines.Lines[row]
+}
+
+func (lines *Lines) String() string {
+	return strings.Join(lines.Lines, "\n")
 }

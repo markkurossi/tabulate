@@ -41,6 +41,9 @@ func TestJSONReflect(t *testing.T) {
 				Work:  true,
 			},
 		},
+		Meta: &Info{
+			Email: "mtr@iki.fi",
+		},
 		Mapping: map[string]string{
 			"First":  "1st",
 			"Second": "2nd",

@@ -13,7 +13,7 @@ import (
 )
 
 type jsonMarshaler interface {
-	marshalJSON() (map[string]interface{}, error)
+	marshalJSON() (interface{}, error)
 }
 
 // MarshalJSON implements the JSON Marshaler interface.
@@ -25,7 +25,7 @@ func (t *Tabulate) MarshalJSON() ([]byte, error) {
 	return json.Marshal(content)
 }
 
-func (t *Tabulate) marshalJSON() (map[string]interface{}, error) {
+func (t *Tabulate) marshalJSON() (interface{}, error) {
 	content := make(map[string]interface{})
 
 	for _, row := range t.Rows {
@@ -52,6 +52,25 @@ func (t *Tabulate) marshalJSON() (map[string]interface{}, error) {
 			content[key] = columns
 		} else {
 			content[key] = columns[0]
+		}
+	}
+
+	return content, nil
+}
+
+func (arr *Array) marshalJSON() (interface{}, error) {
+	var content []interface{}
+
+	for _, data := range arr.content {
+		marshaler, ok := data.(jsonMarshaler)
+		if ok {
+			v, err := marshaler.marshalJSON()
+			if err != nil {
+				return nil, err
+			}
+			content = append(content, v)
+		} else {
+			content = append(content, data.String())
 		}
 	}
 

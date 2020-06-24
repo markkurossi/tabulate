@@ -107,6 +107,7 @@ type Tabulate struct {
 	Escape  Escape
 	Headers []*Column
 	Rows    []*Row
+	asData  Data
 }
 
 // Escape is an escape function for converting table cell value into
@@ -367,12 +368,32 @@ func (t *Tabulate) printColumn(o io.Writer, col *Column,
 	}
 }
 
-// Data returns the tabulator output as Data so that it can be
-// embedded into other tabulators.
-func (t *Tabulate) Data() Data {
-	builder := new(strings.Builder)
-	t.Print(builder)
-	return NewLines(builder.String())
+func (t *Tabulate) data() Data {
+	if t.asData == nil {
+		builder := new(strings.Builder)
+		t.Print(builder)
+		t.asData = NewLines(builder.String())
+	}
+	return t.asData
+}
+
+// Width implements the Width of the Data interface.
+func (t *Tabulate) Width() int {
+	return t.data().Width()
+}
+
+// Height implements the Height of the Data interface.
+func (t *Tabulate) Height() int {
+	return t.data().Height()
+}
+
+// Content implements the Content of the Data interface.
+func (t *Tabulate) Content(row int) string {
+	return t.data().Content(row)
+}
+
+func (t *Tabulate) String() string {
+	return t.data().String()
 }
 
 // Clone creates a new tabulator sharing the headers and their

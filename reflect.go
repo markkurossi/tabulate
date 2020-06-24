@@ -210,7 +210,7 @@ func reflectIntSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 func reflectSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	value reflect.Value) (Data, error) {
 
-	var lines []string
+	data := new(Array)
 loop:
 	for i := 0; i < value.Len(); i++ {
 		v := value.Index(i)
@@ -218,7 +218,7 @@ loop:
 		for v.Type().Kind() == reflect.Ptr {
 			if v.IsZero() {
 				if flags&OmitEmpty == 0 {
-					lines = append(lines, nilLabel)
+					data.Append(NewText(nilLabel))
 				}
 				continue loop
 			}
@@ -231,22 +231,18 @@ loop:
 			if err != nil {
 				return nil, err
 			}
-			for row := 0; row < sub.Height(); row++ {
-				lines = append(lines, sub.Content(row))
-			}
+			data.Append(sub)
 
 		default:
-			data, err := reflectValue(tab, flags, tags, v)
+			sub, err := reflectValue(tab, flags, tags, v)
 			if err != nil {
 				return nil, err
 			}
-			for row := 0; row < data.Height(); row++ {
-				lines = append(lines, data.Content(row))
-			}
+			data.Append(sub)
 		}
 	}
 
-	return NewLinesData(lines), nil
+	return data, nil
 }
 
 type row struct {

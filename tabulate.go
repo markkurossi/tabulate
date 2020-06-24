@@ -377,17 +377,17 @@ func (t *Tabulate) data() Data {
 	return t.asData
 }
 
-// Width implements the Width of the Data interface.
+// Width implements the Data.Width().
 func (t *Tabulate) Width() int {
 	return t.data().Width()
 }
 
-// Height implements the Height of the Data interface.
+// Height implements the Data.Height().
 func (t *Tabulate) Height() int {
 	return t.data().Height()
 }
 
-// Content implements the Content of the Data interface.
+// Content implements the Data.Content().
 func (t *Tabulate) Content(row int) string {
 	return t.data().Content(row)
 }
@@ -492,71 +492,4 @@ func (col *Column) Content(row int) string {
 		return ""
 	}
 	return col.Data.Content(row)
-}
-
-// Data contains table cell data.
-type Data interface {
-	Width() int
-	Height() int
-	Content(row int) string
-	String() string
-}
-
-// Lines implements the Data interface over an array of lines.
-type Lines struct {
-	MaxWidth int
-	Lines    []string
-}
-
-// NewLines creates a new Lines data from the argument string. The
-// argument string is split into lines from the newline ('\n')
-// character.
-func NewLines(str string) *Lines {
-	return NewLinesData(strings.Split(strings.TrimRight(str, "\n"), "\n"))
-}
-
-// NewLinesData creates a new Lines data from the array of strings.
-func NewLinesData(lines []string) *Lines {
-	var max int
-	for _, line := range lines {
-		l := len([]rune(line))
-		if l > max {
-			max = l
-		}
-	}
-
-	return &Lines{
-		MaxWidth: max,
-		Lines:    lines,
-	}
-}
-
-// NewText creates a new Lines data, containing one line.
-func NewText(str string) *Lines {
-	return &Lines{
-		MaxWidth: len([]rune(str)),
-		Lines:    []string{str},
-	}
-}
-
-// Width implements the Data.Width().
-func (lines *Lines) Width() int {
-	return lines.MaxWidth
-}
-
-// Height implements the Data.Height().
-func (lines *Lines) Height() int {
-	return len(lines.Lines)
-}
-
-// Content implements the Data.Content().
-func (lines *Lines) Content(row int) string {
-	if row >= lines.Height() {
-		return ""
-	}
-	return lines.Lines[row]
-}
-
-func (lines *Lines) String() string {
-	return strings.Join(lines.Lines, "\n")
 }

@@ -7,6 +7,8 @@
 package tabulate
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -101,4 +103,25 @@ func ExampleReflect() {
 	// | Publisher | MIT Press                                         |
 	// | Published | 1985                                              |
 	// +-----------+---------------------------------------------------+
+}
+
+func ExampleTabulate_MarshalJSON() {
+	tab := NewUnicode()
+	tab.Header("Key").SetAlign(MR)
+	tab.Header("Value").SetAlign(ML)
+
+	row := tab.Row()
+	row.Column("Boolean")
+	row.ColumnData(NewValue(false))
+
+	row = tab.Row()
+	row.Column("Integer")
+	row.ColumnData(NewValue(42))
+
+	data, err := json.Marshal(tab)
+	if err != nil {
+		log.Fatalf("JSON marshal failed: %s", err)
+	}
+	fmt.Println(string(data))
+	// Output: {"Boolean":false,"Integer":42}
 }

@@ -10,28 +10,34 @@ reflection from Go values.
 In the programmatic table construction, you first create a new table
 and define the headers with optional layout attributes:
 
-    tab := NewUnicode()
-    tab.Header()
-    tab.Header("Year").SetAlign(MR)
-    tab.Header("Income").SetAlign(MR)
+```go
+tab := NewUnicode()
+tab.Header()
+tab.Header("Year").SetAlign(MR)
+tab.Header("Income").SetAlign(MR)
+```
 
 After that, you add data rows:
 
-    row := tab.Row()
-    row.Column("2018")
-    row.Column("100")
+```go
+row := tab.Row()
+row.Column("2018")
+row.Column("100")
 
-    row = tab.Row()
-    row.Column("2019")
-    row.Column("110")
+row = tab.Row()
+row.Column("2019")
+row.Column("110")
 
-    row = tab.Row()
-    row.Column("2020")
-    row.Column("200")
+row = tab.Row()
+row.Column("2020")
+row.Column("200")
+```
 
 Finally, you print the table:
 
-    tab.Print(os.Stdout)
+```go
+tab.Print(os.Stdout)
+```
 
 This outputs the table to the selected writer:
 
@@ -49,40 +55,42 @@ The reflection mode allows you to easily tabulate Go data
 structures. The resulting table will always have two columns: key and
 value. But the value columns can contain nested tables.
 
-    type Person struct {
-        Name string
-    }
+```go
+type Person struct {
+    Name string
+}
 
-    type Book struct {
-        Title     string
-        Author    []Person
-        Publisher string
-        Published int
-    }
+type Book struct {
+    Title     string
+    Author    []Person
+    Publisher string
+    Published int
+}
 
-    tab := NewASCII()
-    tab.Header("Key").SetAlign(ML)
-    tab.Header("Value")
-    err := Reflect(tab, 0, nil, &Book{
-        Title: "Structure and Interpretation of Computer Programs",
-        Author: []Person{
-            Person{
-                Name: "Harold Abelson",
-            },
-            Person{
-                Name: "Gerald Jay Sussman",
-            },
-            Person{
-                Name: "Julie Sussman",
-            },
+tab := NewASCII()
+tab.Header("Key").SetAlign(ML)
+tab.Header("Value")
+err := Reflect(tab, 0, nil, &Book{
+    Title: "Structure and Interpretation of Computer Programs",
+    Author: []Person{
+        Person{
+            Name: "Harold Abelson",
         },
-        Publisher: "MIT Press",
-        Published: 1985,
-    })
-    if err != nil {
-        log.Fatal(err)
-    }
-    tab.Print(os.Stdout)
+        Person{
+            Name: "Gerald Jay Sussman",
+        },
+        Person{
+            Name: "Julie Sussman",
+        },
+    },
+    Publisher: "MIT Press",
+    Published: 1985,
+})
+if err != nil {
+    log.Fatal(err)
+}
+tab.Print(os.Stdout)
+```
 
 This example renders the following table:
 
@@ -108,3 +116,35 @@ This example renders the following table:
     | Publisher | MIT Press                                         |
     | Published | 1985                                              |
     +-----------+---------------------------------------------------+
+
+## JSON marshalling
+
+The Tabulate object implements the MarshalJSON interface so you can
+marshal tabulated data directly into JSON.
+
+
+```go
+tab := NewUnicode()
+tab.Header("Key").SetAlign(MR)
+tab.Header("Value").SetAlign(ML)
+
+row := tab.Row()
+row.Column("Boolean")
+row.ColumnData(NewValue(false))
+
+row = tab.Row()
+row.Column("Integer")
+row.ColumnData(NewValue(42))
+
+data, err := json.Marshal(tab)
+if err != nil {
+	log.Fatalf("JSON marshal failed: %s", err)
+}
+fmt.Println(string(data))
+```
+
+This example outputs the following JSON output:
+
+```json
+{"Boolean":false,"Integer":42}
+```

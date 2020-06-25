@@ -20,6 +20,7 @@ type Outer struct {
 	Age     int
 	Address *Address `tabulate:"omitempty"`
 	Info    []*Info
+	Meta    *Info `tabulate:"omitempty"`
 	Mapping map[string]string
 }
 

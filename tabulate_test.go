@@ -79,7 +79,7 @@ func TestNested(t *testing.T) {
 
 	row = tab.Row()
 	row.Column("Numbers")
-	row.ColumnData(tabulate(NewUnicode(), TR).Data())
+	row.ColumnData(tabulate(NewUnicode(), TR))
 
 	tab.Print(os.Stdout)
 }

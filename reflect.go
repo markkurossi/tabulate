@@ -52,20 +52,19 @@ func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
 		return reflectMap(tab, flags, tagMap, value)
 	}
 
-	lines, err := reflectValue(tab, flags, tagMap, value)
+	data, err := reflectValue(tab, flags, tagMap, value)
 	if err != nil {
 		return err
 	}
 	row := tab.Row()
 	row.Column("")
-	row.ColumnData(NewLinesData(lines))
+	row.ColumnData(data)
 
 	return nil
 }
 
 func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
-	value reflect.Value) ([]string, error) {
-	var text string
+	value reflect.Value) (Data, error) {
 
 	if value.CanInterface() {
 		switch v := value.Interface().(type) {
@@ -74,7 +73,7 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 			if err != nil {
 				return nil, err
 			}
-			return []string{string(data)}, nil
+			return NewLinesData([]string{string(data)}), nil
 		}
 	}
 
@@ -82,9 +81,9 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	for value.Type().Kind() == reflect.Interface {
 		if value.IsZero() {
 			if flags&OmitEmpty == 0 {
-				return []string{nilLabel}, nil
+				return NewLinesData([]string{nilLabel}), nil
 			}
-			return nil, nil
+			return NewLinesData(nil), nil
 		}
 		value = value.Elem()
 	}
@@ -93,7 +92,7 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	for value.Type().Kind() == reflect.Ptr {
 		if value.IsZero() {
 			if flags&OmitEmpty == 0 {
-				return []string{nilLabel}, nil
+				return NewLinesData([]string{nilLabel}), nil
 			}
 		}
 		value = reflect.Indirect(value)
@@ -101,38 +100,30 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 
 	switch value.Type().Kind() {
 	case reflect.Bool:
-		text = fmt.Sprintf("%v", value.Bool())
+		return NewValue(value.Bool()), nil
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		text = fmt.Sprintf("%v", value.Int())
+		return NewValue(value.Int()), nil
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
 		reflect.Uint64:
-		text = fmt.Sprintf("%v", value.Uint())
+		return NewValue(value.Uint()), nil
 
 	case reflect.Map:
-		var lines []string
-
 		if value.Len() > 0 || flags&OmitEmpty == 0 {
 			sub := tab.Clone()
 			err := reflectMap(sub, flags, tags, value)
 			if err != nil {
 				return nil, err
 			}
-			data := sub.Data()
-			for row := 0; row < data.Height(); row++ {
-				lines = append(lines, data.Content(row))
-			}
+			return sub, nil
 		}
-		return lines, nil
+		return NewLinesData(nil), nil
 
 	case reflect.String:
 		text := value.String()
 		lines := strings.Split(strings.TrimRight(text, "\n"), "\n")
-		if len(lines) == 0 && flags&OmitEmpty == 1 {
-			return nil, nil
-		}
-		return lines, nil
+		return NewLinesData(lines), nil
 
 	case reflect.Slice:
 		// Check slice element type.
@@ -153,26 +144,19 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		if err != nil {
 			return nil, err
 		}
-		var lines []string
-		data := sub.Data()
-		for row := 0; row < data.Height(); row++ {
-			lines = append(lines, data.Content(row))
-		}
-		return lines, nil
+		return sub, nil
 
 	default:
-		text = value.String()
+		text := value.String()
+		if len(text) == 0 && flags&OmitEmpty == 1 {
+			return NewLinesData(nil), nil
+		}
+		return NewLinesData([]string{text}), nil
 	}
-
-	if len(text) == 0 && flags&OmitEmpty == 1 {
-		return nil, nil
-	}
-
-	return []string{text}, nil
 }
 
 func reflectByteSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
-	value reflect.Value) ([]string, error) {
+	value reflect.Value) (Data, error) {
 
 	arr, ok := value.Interface().([]byte)
 	if !ok {
@@ -189,11 +173,11 @@ func reflectByteSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		}
 		lines = append(lines, fmt.Sprintf("%x", arr[i:i+l]))
 	}
-	return lines, nil
+	return NewLinesData(lines), nil
 }
 
 func reflectIntSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
-	value reflect.Value) ([]string, error) {
+	value reflect.Value) (Data, error) {
 
 	var lines []string
 	var line string
@@ -217,13 +201,13 @@ func reflectIntSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	if len(line) > 0 {
 		lines = append(lines, line)
 	}
-	return lines, nil
+	return NewLinesData(lines), nil
 }
 
 func reflectSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
-	value reflect.Value) ([]string, error) {
+	value reflect.Value) (Data, error) {
 
-	var lines []string
+	data := new(Array)
 loop:
 	for i := 0; i < value.Len(); i++ {
 		v := value.Index(i)
@@ -231,7 +215,7 @@ loop:
 		for v.Type().Kind() == reflect.Ptr {
 			if v.IsZero() {
 				if flags&OmitEmpty == 0 {
-					lines = append(lines, nilLabel)
+					data.Append(NewText(nilLabel))
 				}
 				continue loop
 			}
@@ -244,21 +228,18 @@ loop:
 			if err != nil {
 				return nil, err
 			}
-			data := sub.Data()
-			for row := 0; row < data.Height(); row++ {
-				lines = append(lines, data.Content(row))
-			}
+			data.Append(sub)
 
 		default:
-			l, err := reflectValue(tab, flags, tags, v)
+			sub, err := reflectValue(tab, flags, tags, v)
 			if err != nil {
 				return nil, err
 			}
-			lines = append(lines, l...)
+			data.Append(sub)
 		}
 	}
 
-	return lines, nil
+	return data, nil
 }
 
 type row struct {
@@ -272,17 +253,17 @@ func reflectMap(tab *Tabulate, flags Flags, tags map[string]bool,
 	var rows []row
 	iter := v.MapRange()
 	for iter.Next() {
-		keyLines, err := reflectValue(tab, flags, tags, iter.Key())
+		keyData, err := reflectValue(tab, flags, tags, iter.Key())
 		if err != nil {
 			return err
 		}
-		valLines, err := reflectValue(tab, flags, tags, iter.Value())
+		valData, err := reflectValue(tab, flags, tags, iter.Value())
 		if err != nil {
 			return err
 		}
 		rows = append(rows, row{
-			key: NewLinesData(keyLines),
-			val: NewLinesData(valLines),
+			key: keyData,
+			val: valData,
 		})
 	}
 
@@ -366,14 +347,14 @@ loop:
 			}
 		}
 
-		lines, err := reflectValue(tab, flags, tags, v)
+		data, err := reflectValue(tab, flags, tags, v)
 		if err != nil {
 			return err
 		}
-		if len(lines) > 0 || flags&OmitEmpty == 0 {
+		if data.Height() > 0 || flags&OmitEmpty == 0 {
 			row := tab.Row()
 			row.Column(field.Name)
-			row.ColumnData(NewLinesData(lines))
+			row.ColumnData(data)
 		}
 
 	}

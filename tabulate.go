@@ -107,6 +107,7 @@ type Tabulate struct {
 	Escape  Escape
 	Headers []*Column
 	Rows    []*Row
+	asData  Data
 }
 
 // Escape is an escape function for converting table cell value into
@@ -367,12 +368,32 @@ func (t *Tabulate) printColumn(o io.Writer, col *Column,
 	}
 }
 
-// Data returns the tabulator output as Data so that it can be
-// embedded into other tabulators.
-func (t *Tabulate) Data() Data {
-	builder := new(strings.Builder)
-	t.Print(builder)
-	return NewLines(builder.String())
+func (t *Tabulate) data() Data {
+	if t.asData == nil {
+		builder := new(strings.Builder)
+		t.Print(builder)
+		t.asData = NewLines(builder.String())
+	}
+	return t.asData
+}
+
+// Width implements the Data.Width().
+func (t *Tabulate) Width() int {
+	return t.data().Width()
+}
+
+// Height implements the Data.Height().
+func (t *Tabulate) Height() int {
+	return t.data().Height()
+}
+
+// Content implements the Data.Content().
+func (t *Tabulate) Content(row int) string {
+	return t.data().Content(row)
+}
+
+func (t *Tabulate) String() string {
+	return t.data().String()
 }
 
 // Clone creates a new tabulator sharing the headers and their
@@ -471,66 +492,4 @@ func (col *Column) Content(row int) string {
 		return ""
 	}
 	return col.Data.Content(row)
-}
-
-// Data contains table cell data.
-type Data interface {
-	Width() int
-	Height() int
-	Content(row int) string
-}
-
-// Lines implements the Data interface over an array of lines.
-type Lines struct {
-	MaxWidth int
-	Lines    []string
-}
-
-// NewLines creates a new Lines data from the argument string. The
-// argument string is split into lines from the newline ('\n')
-// character.
-func NewLines(str string) *Lines {
-	return NewLinesData(strings.Split(strings.TrimRight(str, "\n"), "\n"))
-}
-
-// NewLinesData creates a new Lines data from the array of strings.
-func NewLinesData(lines []string) *Lines {
-	var max int
-	for _, line := range lines {
-		l := len([]rune(line))
-		if l > max {
-			max = l
-		}
-	}
-
-	return &Lines{
-		MaxWidth: max,
-		Lines:    lines,
-	}
-}
-
-// NewText creates a new Lines data, containing one line.
-func NewText(str string) *Lines {
-	return &Lines{
-		MaxWidth: len([]rune(str)),
-		Lines:    []string{str},
-	}
-}
-
-// Width implements the Data.Width().
-func (lines *Lines) Width() int {
-	return lines.MaxWidth
-}
-
-// Height implements the Data.Height().
-func (lines *Lines) Height() int {
-	return len(lines.Lines)
-}
-
-// Content implements the Data.Content().
-func (lines *Lines) Content(row int) string {
-	if row >= lines.Height() {
-		return ""
-	}
-	return lines.Lines[row]
 }

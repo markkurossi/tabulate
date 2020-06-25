@@ -26,7 +26,7 @@ func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 	for i := 1; i < len(rows); i++ {
 		row := tab.Row()
 		for _, col := range strings.Split(rows[i], ",") {
-			row.Column(col)
+			row.ColumnData(NewText(col))
 		}
 	}
 	return tab

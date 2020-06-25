@@ -117,37 +117,7 @@ This example renders the following table:
     | Published | 1985                                              |
     +-----------+---------------------------------------------------+
 
-## JSON marshalling
-
-The Tabulate object implements the MarshalJSON interface so you can
-marshal tabulated data directly into JSON.
-
-
-```go
-tab := NewUnicode()
-tab.Header("Key").SetAlign(MR)
-tab.Header("Value").SetAlign(ML)
-
-row := tab.Row()
-row.Column("Boolean")
-row.ColumnData(NewValue(false))
-
-row = tab.Row()
-row.Column("Integer")
-row.ColumnData(NewValue(42))
-
-data, err := json.Marshal(tab)
-if err != nil {
-	log.Fatalf("JSON marshal failed: %s", err)
-}
-fmt.Println(string(data))
-```
-
-This example outputs the following JSON output:
-
-```json
-{"Boolean":false,"Integer":42}
-```
+# Formatting
 
 ## Cell alignment
 
@@ -183,4 +153,95 @@ the data column:
 ```go
 row = tab.Row()
 row.Column("Integer").SetAlign(TL)
+```
+
+# Output formats
+
+## Whitespace
+
+The NewWS() creates a new whitespace tabulator:
+
+     Year  Income  Expenses
+     2018  100     90
+     2019  110     85
+     2020  107     50
+
+## ASCII
+
+The NewASCII() creates a new tabulator that uses ASCII characters to
+render the table borders:
+
+    +------+--------+----------+
+    | Year | Income | Expenses |
+    +------+--------+----------+
+    | 2018 | 100    | 90       |
+    | 2019 | 110    | 85       |
+    | 2020 | 107    | 50       |
+    +------+--------+----------+
+
+## Unicode
+
+The NewUnicode() creates a new tabulator that uses Unicode line
+drawing characters to render the table borders:
+
+    ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+    ┃ Year ┃ Income ┃ Expenses ┃
+    ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━┫
+    ┃ 2018 ┃ 100    ┃ 90       ┃
+    ┃ 2019 ┃ 110    ┃ 85       ┃
+    ┃ 2020 ┃ 107    ┃ 50       ┃
+    ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+
+## Colon
+
+The NewColon() creates a new tabulator that uses colon (':') character
+to render vertical table borders:
+
+    Year : Income : Expenses
+    2018 : 100    : 90
+    2019 : 110    : 85
+    2020 : 107    : 50
+
+## Comma-Separated Values (CSV) output
+
+The NewCSV() creates a new tabulator that outputs the data in CSV
+format. It uses empty borders and an escape function which handles ','
+and '\n' characters inside cell values:
+
+    Year,Income,Source
+    2018,100,Salary
+    2019,110,"""Consultation"""
+    2020,120,"Lottery
+    et al"
+
+## Native JSON marshalling
+
+The Tabulate object implements the MarshalJSON interface so you can
+marshal tabulated data directly into JSON.
+
+
+```go
+tab := NewUnicode()
+tab.Header("Key").SetAlign(MR)
+tab.Header("Value").SetAlign(ML)
+
+row := tab.Row()
+row.Column("Boolean")
+row.ColumnData(NewValue(false))
+
+row = tab.Row()
+row.Column("Integer")
+row.ColumnData(NewValue(42))
+
+data, err := json.Marshal(tab)
+if err != nil {
+	log.Fatalf("JSON marshal failed: %s", err)
+}
+fmt.Println(string(data))
+```
+
+This example outputs the following JSON output:
+
+```json
+{"Boolean":false,"Integer":42}
 ```

@@ -156,14 +156,18 @@ iEk07xyUePVXINXPEnOQ
 -----END CERTIFICATE-----
 `
 
-func TestReflectTextMarshaler(t *testing.T) {
+func decodeCertificate() (*x509.Certificate, error) {
 	block, _ := pem.Decode([]byte(certPEM))
 	if block == nil {
-		t.Fatalf("PEM decode failed")
+		return nil, fmt.Errorf("PEM decode failed")
 	}
-	c, err := x509.ParseCertificate(block.Bytes)
+	return x509.ParseCertificate(block.Bytes)
+}
+
+func TestReflectTextMarshaler(t *testing.T) {
+	c, err := decodeCertificate()
 	if err != nil {
-		t.Fatalf("x509.ParseCertificate: %s", err)
+		t.Fatalf("failed to decode certificate: %s", err)
 	}
 
 	err = reflectTest(0, nil, &Outer2{

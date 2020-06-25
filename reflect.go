@@ -132,10 +132,10 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 			return reflectByteSliceValue(tab, flags, tags, value)
 
 		case reflect.Int, reflect.Uint:
-			return reflectIntSliceValue(tab, flags, tags, value)
+			return reflectSliceValue(tab, flags, tags, 40, value)
 
 		default:
-			return reflectSliceValue(tab, flags, tags, value)
+			return reflectSliceValue(tab, flags, tags, 0, value)
 		}
 
 	case reflect.Struct:
@@ -176,38 +176,10 @@ func reflectByteSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	return NewLinesData(lines), nil
 }
 
-func reflectIntSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
-	value reflect.Value) (Data, error) {
-
-	var lines []string
-	var line string
-	for i := 0; i < value.Len(); i++ {
-		if len(line) > 0 {
-			line += " "
-		}
-		switch value.Type().Elem().Kind() {
-		case reflect.Int:
-			line += fmt.Sprintf("%v", value.Index(i).Int())
-		case reflect.Uint:
-			line += fmt.Sprintf("%v", value.Index(i).Uint())
-		default:
-			line += value.String()
-		}
-		if len(line) > 40 {
-			lines = append(lines, line)
-			line = ""
-		}
-	}
-	if len(line) > 0 {
-		lines = append(lines, line)
-	}
-	return NewLinesData(lines), nil
-}
-
 func reflectSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
-	value reflect.Value) (Data, error) {
+	width int, value reflect.Value) (Data, error) {
 
-	data := new(Array)
+	data := NewArray(width)
 loop:
 	for i := 0; i < value.Len(); i++ {
 		v := value.Index(i)

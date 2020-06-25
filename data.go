@@ -121,41 +121,88 @@ func (lines *Lines) String() string {
 	return strings.Join(lines.Lines, "\n")
 }
 
+// NewArray creates a new Array Data type with the specified maximum
+// rendering width.
+func NewArray(maxWidth int) *Array {
+	return &Array{
+		maxWidth: maxWidth,
+	}
+}
+
 // Array implements the Data interface for an array of Data elements.
 type Array struct {
 	maxWidth int
+	width    int
 	height   int
 	content  []Data
+	lines    []string
+}
+
+func (arr *Array) addLine(line string) {
+	l := len([]rune(line))
+	if l > arr.width {
+		arr.width = l
+	}
+	arr.lines = append(arr.lines, line)
+}
+
+func (arr *Array) layout() {
+	if len(arr.lines) > 0 {
+		return
+	}
+	var line string
+	for _, c := range arr.content {
+		h := c.Height()
+		if h == 0 {
+			continue
+		}
+		if h > 1 {
+			if len(line) > 0 {
+				arr.addLine(line)
+				line = ""
+			}
+			for row := 0; row < h; row++ {
+				arr.addLine(c.Content(row))
+			}
+		} else {
+			l := c.Content(0)
+			if len(line) == 0 {
+				line = l
+			} else if len(line)+len(l) <= arr.maxWidth {
+				line += " "
+				line += l
+			} else {
+				arr.addLine(line)
+				line = l
+			}
+		}
+	}
+	if len(line) > 0 {
+		arr.addLine(line)
+	}
 }
 
 // Append adds data to the array.
 func (arr *Array) Append(data Data) {
-	w := data.Width()
-	if w > arr.maxWidth {
-		arr.maxWidth = w
-	}
-	arr.height += data.Height()
 	arr.content = append(arr.content, data)
 }
 
 // Width implements the Data.Width().
 func (arr *Array) Width() int {
-	return arr.maxWidth
+	arr.layout()
+	return arr.width
 }
 
 // Height implements the Data.Height().
 func (arr *Array) Height() int {
-	return arr.height
+	arr.layout()
+	return len(arr.lines)
 }
 
 // Content implements the Data.Content().
 func (arr *Array) Content(row int) string {
-	for _, c := range arr.content {
-		h := c.Height()
-		if h > row {
-			return c.Content(row)
-		}
-		row -= h
+	if row < len(arr.lines) {
+		return arr.lines[row]
 	}
 	return ""
 }

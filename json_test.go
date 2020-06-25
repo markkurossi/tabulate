@@ -58,3 +58,23 @@ func TestJSONReflect(t *testing.T) {
 	}
 	fmt.Printf("JSON marshal reflect:\n%s\n", string(data))
 }
+
+func TestJSONCertReflect(t *testing.T) {
+	c, err := decodeCertificate()
+	if err != nil {
+		t.Fatalf("Failed to decode certificate: %s", err)
+	}
+	tab := NewWS()
+	tab.Header("Field")
+	tab.Header("Value")
+
+	err = Reflect(tab, OmitEmpty, nil, c)
+	if err != nil {
+		t.Fatalf("Reflect failed: %s", err)
+	}
+	data, err := json.MarshalIndent(tab, "", "  ")
+	if err != nil {
+		t.Fatalf("JSON marshal cert reflect failed: %s", err)
+	}
+	fmt.Printf("JSON marshal cert reflect:\n%s\n", string(data))
+}

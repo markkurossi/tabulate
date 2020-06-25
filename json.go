@@ -9,7 +9,6 @@ package tabulate
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 )
 
 type jsonMarshaler interface {
@@ -35,7 +34,6 @@ func (t *Tabulate) marshalJSON() (interface{}, error) {
 		var columns []interface{}
 		for i := 1; i < len(row.Columns); i++ {
 			col := row.Columns[i]
-			fmt.Printf("Data: %v (%T)\n", col.Data, col.Data)
 			marshaler, ok := col.Data.(jsonMarshaler)
 			if ok {
 				v, err := marshaler.marshalJSON()
@@ -56,6 +54,10 @@ func (t *Tabulate) marshalJSON() (interface{}, error) {
 	}
 
 	return content, nil
+}
+
+func (v *Value) marshalJSON() (interface{}, error) {
+	return v.value, nil
 }
 
 func (arr *Array) marshalJSON() (interface{}, error) {

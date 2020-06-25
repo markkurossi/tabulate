@@ -65,7 +65,6 @@ func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
 
 func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	value reflect.Value) (Data, error) {
-	var text string
 
 	if value.CanInterface() {
 		switch v := value.Interface().(type) {
@@ -101,14 +100,14 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 
 	switch value.Type().Kind() {
 	case reflect.Bool:
-		text = fmt.Sprintf("%v", value.Bool())
+		return NewValue(value.Bool()), nil
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		text = fmt.Sprintf("%v", value.Int())
+		return NewValue(value.Int()), nil
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
 		reflect.Uint64:
-		text = fmt.Sprintf("%v", value.Uint())
+		return NewValue(value.Uint()), nil
 
 	case reflect.Map:
 		if value.Len() > 0 || flags&OmitEmpty == 0 {
@@ -148,14 +147,12 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		return sub, nil
 
 	default:
-		text = value.String()
+		text := value.String()
+		if len(text) == 0 && flags&OmitEmpty == 1 {
+			return NewLinesData(nil), nil
+		}
+		return NewLinesData([]string{text}), nil
 	}
-
-	if len(text) == 0 && flags&OmitEmpty == 1 {
-		return NewLinesData(nil), nil
-	}
-
-	return NewLinesData([]string{text}), nil
 }
 
 func reflectByteSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,

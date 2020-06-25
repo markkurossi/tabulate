@@ -7,7 +7,14 @@
 package tabulate
 
 import (
+	"fmt"
 	"strings"
+)
+
+var (
+	_ = Data((&Value{}))
+	_ = Data((&Lines{}))
+	_ = Data((&Array{}))
 )
 
 // Data contains table cell data.
@@ -16,6 +23,43 @@ type Data interface {
 	Height() int
 	Content(row int) string
 	String() string
+}
+
+// Value implements the Data interface for single value, such as bool,
+// integer, etc.
+type Value struct {
+	string string
+	value  interface{}
+}
+
+// NewValue creates a new Value for the argument value element.
+func NewValue(v interface{}) *Value {
+	return &Value{
+		string: fmt.Sprintf("%v", v),
+		value:  v,
+	}
+}
+
+// Width implements the Data.Width().
+func (v *Value) Width() int {
+	return len([]rune(v.string))
+}
+
+// Height implements the Data.Height().
+func (v *Value) Height() int {
+	return 1
+}
+
+// Content implements the Data.Content().
+func (v *Value) Content(row int) string {
+	if row > 0 {
+		return ""
+	}
+	return v.string
+}
+
+func (v *Value) String() string {
+	return v.string
 }
 
 // Lines implements the Data interface over an array of lines.

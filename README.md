@@ -176,3 +176,11 @@ Bottom) and the second character specifies the horizointal alignment
 | BC        | Bottom   | Center     |
 | BR        | Bottom   | Right      |
 | None      | -        | -          |
+
+The default alignment can be overridden by calling the SetAlign() for
+the data column:
+
+```go
+row = tab.Row()
+row.Column("Integer").SetAlign(TL)
+```

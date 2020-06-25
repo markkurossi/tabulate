@@ -214,6 +214,13 @@ and '\n' characters inside cell values:
     2020,120,"Lottery
     et al"
 
+## JSON output
+
+The NewJSON() creates a new tabulator that outputs the data in JSON
+format:
+
+    {"2018":["100","90"],"2019":["110","85"],"2020":["107","50"]}
+
 ## Native JSON marshalling
 
 The Tabulate object implements the MarshalJSON interface so you can

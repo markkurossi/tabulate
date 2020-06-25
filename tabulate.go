@@ -7,6 +7,7 @@
 package tabulate
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -105,6 +106,7 @@ type Tabulate struct {
 	Padding int
 	Border  Border
 	Escape  Escape
+	Output  func(t *Tabulate, o io.Writer)
 	Headers []*Column
 	Rows    []*Row
 	asData  Data
@@ -178,6 +180,25 @@ func NewCSV() *Tabulate {
 	}
 }
 
+func outputJSON(t *Tabulate, o io.Writer) {
+	data, err := json.Marshal(t)
+	if err != nil {
+		fmt.Fprintf(o, "JSON marshal failed: %s", err)
+		return
+	}
+	fmt.Fprintf(o, string(data))
+	fmt.Fprintln(o)
+}
+
+// NewJSON creates a new tabulator for JSON outputs.
+func NewJSON() *Tabulate {
+	return &Tabulate{
+		Padding: 0,
+		Border:  WhiteSpace,
+		Output:  outputJSON,
+	}
+}
+
 // Header adds a new column to the table and specifies its header
 // label.
 func (t *Tabulate) Header(label string) *Column {
@@ -205,6 +226,10 @@ func (t *Tabulate) Row() *Row {
 
 // Print layouts the table into the argument io.Writer.
 func (t *Tabulate) Print(o io.Writer) {
+	if t.Output != nil {
+		t.Output(t, o)
+		return
+	}
 	widths := make([]int, len(t.Headers))
 
 	for idx, hdr := range t.Headers {

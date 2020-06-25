@@ -41,6 +41,7 @@ func align(align Align) {
 	tabulate(NewASCII(), align).Print(os.Stdout)
 	tabulate(NewUnicode(), align).Print(os.Stdout)
 	tabulate(NewColon(), align).Print(os.Stdout)
+	tabulate(NewJSON(), align).Print(os.Stdout)
 }
 
 func TestBorders(t *testing.T) {

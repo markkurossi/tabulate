@@ -148,3 +148,31 @@ This example outputs the following JSON output:
 ```json
 {"Boolean":false,"Integer":42}
 ```
+
+## Cell alignment
+
+Column headers set the default alignment for all cells in the
+corresponding columns. The column default alignment is set when the
+headers are defined:
+
+```go
+tab.Header("Year").SetAlign(MR)
+```
+
+The alignment is defined with the Align constants. The first character
+of the constant name specifies the vertical alignment (Top, Middle,
+Bottom) and the second character specifies the horizointal alignment
+(Left, Center, Right).
+
+| Alignment | Vertical | Horizontal |
+|:---------:|:--------:|:----------:|
+| TL        | Top      | Left       |
+| TC        | Top      | Center     |
+| TR        | Top      | Right      |
+| ML        | Middle   | Left       |
+| MC        | Middle   | Center     |
+| MR        | Middle   | Right      |
+| BL        | Bottom   | Left       |
+| BC        | Bottom   | Center     |
+| BR        | Bottom   | Right      |
+| None      | -        | -          |

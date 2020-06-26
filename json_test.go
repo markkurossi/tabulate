@@ -29,6 +29,7 @@ func TestJSONReflect(t *testing.T) {
 	err := Reflect(tab, OmitEmpty, nil, &Outer{
 		Name: "Alyssa P. Hacker",
 		Age:  45,
+		NPS:  9.9,
 		Address: &Address{
 			Lines: []string{"42 Hacker way", "03139 Cambridge", "MA"},
 		},

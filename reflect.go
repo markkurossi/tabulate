@@ -109,6 +109,9 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 		reflect.Uint64:
 		return NewValue(value.Uint()), nil
 
+	case reflect.Float32, reflect.Float64:
+		return NewValue(value.Float()), nil
+
 	case reflect.Map:
 		if value.Len() > 0 || flags&OmitEmpty == 0 {
 			sub := tab.Clone()

@@ -18,6 +18,7 @@ type Outer struct {
 	Name    string
 	Comment string `tabulate:"@detail"`
 	Age     int
+	NPS     float64
 	Address *Address `tabulate:"omitempty"`
 	Info    []*Info
 	Meta    *Info `tabulate:"omitempty"`

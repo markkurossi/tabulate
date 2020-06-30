@@ -11,7 +11,7 @@ In the programmatic table construction, you first create a new table
 and define the headers with optional layout attributes:
 
 ```go
-tab := NewUnicode()
+tab := New(Unicode)
 tab.Header()
 tab.Header("Year").SetAlign(MR)
 tab.Header("Income").SetAlign(MR)
@@ -67,7 +67,7 @@ type Book struct {
     Published int
 }
 
-tab := NewASCII()
+tab := New(ASCII)
 tab.Header("Key").SetAlign(ML)
 tab.Header("Value")
 err := Reflect(tab, 0, nil, &Book{
@@ -157,9 +157,9 @@ row.Column("Integer").SetAlign(TL)
 
 # Output formats
 
-## Whitespace
+## Plain
 
-The NewWS() creates a new whitespace tabulator:
+The Plain format does not draw any table borders:
 
      Year  Income  Expenses
      2018  100     90
@@ -168,7 +168,7 @@ The NewWS() creates a new whitespace tabulator:
 
 ## ASCII
 
-The NewASCII() creates a new tabulator that uses ASCII characters to
+The ASCII format creates a new tabulator that uses ASCII characters to
 render the table borders:
 
     +------+--------+----------+
@@ -181,26 +181,47 @@ render the table borders:
 
 ## Unicode
 
-The NewUnicode() creates a new tabulator that uses Unicode line
+The Unicode format creates a new tabulator that uses Unicode line
 drawing characters to render the table borders:
 
     ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
     ┃ Year ┃ Income ┃ Expenses ┃
-    ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━┫
-    ┃ 2018 ┃ 100    ┃ 90       ┃
-    ┃ 2019 ┃ 110    ┃ 85       ┃
-    ┃ 2020 ┃ 107    ┃ 50       ┃
-    ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+    ┡━━━━━━╇━━━━━━━━╇━━━━━━━━━━┩
+    │ 2018 │ 100    │ 90       │
+    │ 2019 │ 110    │ 85       │
+    │ 2020 │ 107    │ 50       │
+    └──────┴────────┴──────────┘
 
 ## Colon
 
-The NewColon() creates a new tabulator that uses colon (':') character
-to render vertical table borders:
+The Colon format creates a new tabulator that uses colon (':')
+character to render vertical table borders:
 
     Year : Income : Expenses
     2018 : 100    : 90
     2019 : 110    : 85
     2020 : 107    : 50
+
+## Simple
+
+The Simple format draws horizontal lines between header and body
+columns:
+
+    Year  Income  Expenses
+    ----  ------  --------
+    2018  100     90
+    2019  110     85
+    2020  107     50
+
+## Github
+
+The Github creates tables with the Github Markdown syntax:
+
+    | Year | Income | Expenses |
+    |------|--------|----------|
+    | 2018 | 100    | 90       |
+    | 2019 | 110    | 85       |
+    | 2020 | 107    | 50       |
 
 ## Comma-Separated Values (CSV) output
 

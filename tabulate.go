@@ -33,9 +33,26 @@ const (
 	None
 )
 
+// Style specifies the table borders and rendering style.
+type Style int
+
+// Table styles.
+const (
+	Plain Style = iota
+	ASCII
+	Unicode
+	Colon
+	Simple
+	Github
+	CSV
+	JSON
+)
+
 // Border specifies the table border drawing elements.
 type Border struct {
-	H  string
+	HT string
+	HM string
+	HB string
 	VL string
 	VM string
 	VR string
@@ -50,14 +67,17 @@ type Border struct {
 	BR string
 }
 
-// WhiteSpace defines tabulation with whitespace (non-existing)
-// borders.
-var WhiteSpace = Border{}
+// Borders specifies the thable border drawing elements for the table
+// header and body.
+type Borders struct {
+	Header Border
+	Body   Border
+}
 
-// ASCII uses ASCII characters '-', '+', and '|' to draw the table
-// borders.
-var ASCII = Border{
-	H:  "-",
+var asciiBorder = Border{
+	HT: "-",
+	HM: "-",
+	HB: "-",
 	VL: "|",
 	VM: "|",
 	VR: "|",
@@ -72,39 +92,100 @@ var ASCII = Border{
 	BR: "+",
 }
 
-// Unicode uses Unicode line drawing characters to draw the table
-// borders.
-var Unicode = Border{
-	H:  "\u2501",
-	VL: "\u2503",
-	VM: "\u2503",
-	VR: "\u2503",
-	TL: "\u250F",
-	TM: "\u2533",
-	TR: "\u2513",
-	ML: "\u2523",
-	MM: "\u254B",
-	MR: "\u252B",
-	BL: "\u2517",
-	BM: "\u253B",
-	BR: "\u251B",
-}
-
-// Colon uses the ':' character to mark vertical lines between cells.
-var Colon = Border{
-	VM: " : ",
-}
-
-// CSV defines the RFC 4180 Comma-Separated Values tabulation.
-var CSV = Border{
-	VM: ",",
-	VR: "\r",
+var borders = map[Style]Borders{
+	Plain: {},
+	ASCII: {
+		Header: asciiBorder,
+		Body:   asciiBorder,
+	},
+	Unicode: {
+		Header: Border{
+			HT: "\u2501",
+			HM: "\u2501",
+			HB: "\u2501",
+			VL: "\u2503",
+			VM: "\u2503",
+			VR: "\u2503",
+			TL: "\u250F",
+			TM: "\u2533",
+			TR: "\u2513",
+			ML: "\u2521",
+			MM: "\u2547",
+			MR: "\u2529",
+			BL: "\u2517",
+			BM: "\u253B",
+			BR: "\u251B",
+		},
+		Body: Border{
+			HT: "\u2500",
+			HM: "\u2500",
+			HB: "\u2500",
+			VL: "\u2502",
+			VM: "\u2502",
+			VR: "\u2502",
+			TL: "\u250C",
+			TM: "\u252c",
+			TR: "\u2510",
+			ML: "\u251C",
+			MM: "\u253C",
+			MR: "\u2524",
+			BL: "\u2514",
+			BM: "\u2534",
+			BR: "\u2518",
+		},
+	},
+	Colon: {
+		Header: Border{
+			VM: " : ",
+		},
+		Body: Border{
+			VM: " : ",
+		},
+	},
+	Simple: {
+		Header: Border{
+			HM: "-",
+			VM: "  ",
+			MM: "  ",
+		},
+		Body: Border{
+			VM: "  ",
+			MM: "  ",
+		},
+	},
+	Github: {
+		Header: Border{
+			HM: "-",
+			VL: "|",
+			VM: "|",
+			VR: "|",
+			ML: "|",
+			MM: "|",
+			MR: "|",
+		},
+		Body: Border{
+			VL: "|",
+			VM: "|",
+			VR: "|",
+		},
+	},
+	CSV: {
+		Header: Border{
+			VM: ",",
+			VR: "\r",
+		},
+		Body: Border{
+			VM: ",",
+			VR: "\r",
+		},
+	},
+	JSON: {},
 }
 
 // Tabulate defined a tabulator instance.
 type Tabulate struct {
 	Padding int
-	Border  Border
+	Borders Borders
 	Escape  Escape
 	Output  func(t *Tabulate, o io.Writer)
 	Headers []*Column
@@ -116,36 +197,24 @@ type Tabulate struct {
 // the output format.
 type Escape func(string) string
 
-// NewWS creates a new tabulator with the WhiteSpace borders.
-func NewWS() *Tabulate {
-	return &Tabulate{
+// New creates a new tabulate object with the specified rendering
+// style.
+func New(style Style) *Tabulate {
+	tab := &Tabulate{
 		Padding: 2,
-		Border:  WhiteSpace,
+		Borders: borders[style],
 	}
-}
-
-// NewASCII creates a new tabulator with the ASCII borders.
-func NewASCII() *Tabulate {
-	return &Tabulate{
-		Padding: 2,
-		Border:  ASCII,
+	switch style {
+	case Colon, Simple:
+		tab.Padding = 0
+	case CSV:
+		tab.Padding = 0
+		tab.Escape = escapeCSV
+	case JSON:
+		tab.Padding = 0
+		tab.Output = outputJSON
 	}
-}
-
-// NewUnicode creates a new tabulator with the Unicode borders.
-func NewUnicode() *Tabulate {
-	return &Tabulate{
-		Padding: 2,
-		Border:  Unicode,
-	}
-}
-
-// NewColon creates a new tabulator with the Colon borders.
-func NewColon() *Tabulate {
-	return &Tabulate{
-		Padding: 0,
-		Border:  Colon,
-	}
+	return tab
 }
 
 func escapeCSV(val string) string {
@@ -169,17 +238,6 @@ func escapeCSV(val string) string {
 	return string(runes)
 }
 
-// NewCSV creates a new tabulator for CVS outputs. It uses the CSV
-// borders and an escape function which handles ',' and '\n'
-// characters inside cell values.
-func NewCSV() *Tabulate {
-	return &Tabulate{
-		Padding: 0,
-		Border:  CSV,
-		Escape:  escapeCSV,
-	}
-}
-
 func outputJSON(t *Tabulate, o io.Writer) {
 	data, err := json.Marshal(t)
 	if err != nil {
@@ -188,15 +246,6 @@ func outputJSON(t *Tabulate, o io.Writer) {
 	}
 	fmt.Fprintf(o, string(data))
 	fmt.Fprintln(o)
-}
-
-// NewJSON creates a new tabulator for JSON outputs.
-func NewJSON() *Tabulate {
-	return &Tabulate{
-		Padding: 0,
-		Border:  WhiteSpace,
-		Output:  outputJSON,
-	}
 }
 
 // Header adds a new column to the table and specifies its header
@@ -249,16 +298,16 @@ func (t *Tabulate) Print(o io.Writer) {
 	}
 
 	// Header.
-	if len(t.Border.H) > 0 {
-		fmt.Fprint(o, t.Border.TL)
+	if len(t.Borders.Header.HT) > 0 {
+		fmt.Fprint(o, t.Borders.Header.TL)
 		for idx, width := range widths {
 			for i := 0; i < width+t.Padding; i++ {
-				fmt.Fprint(o, t.Border.H)
+				fmt.Fprint(o, t.Borders.Header.HT)
 			}
 			if idx+1 < len(widths) {
-				fmt.Fprint(o, t.Border.TM)
+				fmt.Fprint(o, t.Borders.Header.TM)
 			} else {
-				fmt.Fprintln(o, t.Border.TR)
+				fmt.Fprintln(o, t.Borders.Header.TR)
 			}
 		}
 	}
@@ -277,21 +326,21 @@ func (t *Tabulate) Print(o io.Writer) {
 			} else {
 				hdr = &Column{}
 			}
-			t.printColumn(o, hdr, idx, line, width, height)
+			t.printColumn(o, true, hdr, idx, line, width, height)
 		}
-		fmt.Fprintln(o, t.Border.VR)
+		fmt.Fprintln(o, t.Borders.Header.VR)
 	}
 
-	if len(t.Border.H) > 0 {
-		fmt.Fprint(o, t.Border.ML)
+	if len(t.Borders.Header.HM) > 0 {
+		fmt.Fprint(o, t.Borders.Header.ML)
 		for idx, width := range widths {
 			for i := 0; i < width+t.Padding; i++ {
-				fmt.Fprint(o, t.Border.H)
+				fmt.Fprint(o, t.Borders.Header.HM)
 			}
 			if idx+1 < len(widths) {
-				fmt.Fprint(o, t.Border.MM)
+				fmt.Fprint(o, t.Borders.Header.MM)
 			} else {
-				fmt.Fprintln(o, t.Border.MR)
+				fmt.Fprintln(o, t.Borders.Header.MR)
 			}
 		}
 	}
@@ -308,28 +357,28 @@ func (t *Tabulate) Print(o io.Writer) {
 				} else {
 					col = &Column{}
 				}
-				t.printColumn(o, col, idx, line, width, height)
+				t.printColumn(o, false, col, idx, line, width, height)
 			}
-			fmt.Fprintln(o, t.Border.VR)
+			fmt.Fprintln(o, t.Borders.Body.VR)
 		}
 	}
 
-	if len(t.Border.H) > 0 {
-		fmt.Fprint(o, t.Border.BL)
+	if len(t.Borders.Body.HB) > 0 {
+		fmt.Fprint(o, t.Borders.Body.BL)
 		for idx, width := range widths {
 			for i := 0; i < width+t.Padding; i++ {
-				fmt.Fprint(o, t.Border.H)
+				fmt.Fprint(o, t.Borders.Body.HB)
 			}
 			if idx+1 < len(widths) {
-				fmt.Fprint(o, t.Border.BM)
+				fmt.Fprint(o, t.Borders.Body.BM)
 			} else {
-				fmt.Fprintln(o, t.Border.BR)
+				fmt.Fprintln(o, t.Borders.Body.BR)
 			}
 		}
 	}
 }
 
-func (t *Tabulate) printColumn(o io.Writer, col *Column,
+func (t *Tabulate) printColumn(o io.Writer, hdr bool, col *Column,
 	idx, line, width, height int) {
 
 	vspace := height - col.Height()
@@ -373,10 +422,18 @@ func (t *Tabulate) printColumn(o io.Writer, col *Column,
 		lPad += pad
 	}
 
-	if idx == 0 {
-		fmt.Fprint(o, t.Border.VL)
+	if hdr {
+		if idx == 0 {
+			fmt.Fprint(o, t.Borders.Header.VL)
+		} else {
+			fmt.Fprint(o, t.Borders.Header.VM)
+		}
 	} else {
-		fmt.Fprint(o, t.Border.VM)
+		if idx == 0 {
+			fmt.Fprint(o, t.Borders.Body.VL)
+		} else {
+			fmt.Fprint(o, t.Borders.Body.VM)
+		}
 	}
 	for i := 0; i < lPad; i++ {
 		fmt.Fprint(o, " ")
@@ -427,7 +484,7 @@ func (t *Tabulate) String() string {
 func (t *Tabulate) Clone() *Tabulate {
 	return &Tabulate{
 		Padding: t.Padding,
-		Border:  t.Border,
+		Borders: t.Borders,
 		Escape:  t.Escape,
 		Headers: t.Headers,
 	}

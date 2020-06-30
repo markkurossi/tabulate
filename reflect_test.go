@@ -35,7 +35,7 @@ type Info struct {
 }
 
 func reflectTest(flags Flags, tags []string, v interface{}) error {
-	tab := NewUnicode()
+	tab := New(Unicode)
 	tab.Header("Field").SetAlign(MR)
 	tab.Header("Value").SetAlign(ML)
 

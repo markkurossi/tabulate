@@ -13,7 +13,7 @@ import (
 )
 
 func TestJSONTimeSeries(t *testing.T) {
-	tab := tabulate(NewWS(), TL)
+	tab := tabulate(New(Plain), TL)
 	data, err := json.MarshalIndent(tab, "", "  ")
 	if err != nil {
 		t.Fatalf("JSON marshal time series failed: %s", err)
@@ -22,7 +22,7 @@ func TestJSONTimeSeries(t *testing.T) {
 }
 
 func TestJSONReflect(t *testing.T) {
-	tab := NewWS()
+	tab := New(Plain)
 	tab.Header("Field")
 	tab.Header("Value")
 
@@ -65,7 +65,7 @@ func TestJSONCertReflect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to decode certificate: %s", err)
 	}
-	tab := NewWS()
+	tab := New(Plain)
 	tab.Header("Field")
 	tab.Header("Value")
 

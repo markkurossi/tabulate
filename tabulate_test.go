@@ -37,11 +37,13 @@ func tabulate(tab *Tabulate, align Align) *Tabulate {
 }
 
 func align(align Align) {
-	tabulate(NewWS(), align).Print(os.Stdout)
-	tabulate(NewASCII(), align).Print(os.Stdout)
-	tabulate(NewUnicode(), align).Print(os.Stdout)
-	tabulate(NewColon(), align).Print(os.Stdout)
-	tabulate(NewJSON(), align).Print(os.Stdout)
+	tabulate(New(Plain), align).Print(os.Stdout)
+	tabulate(New(ASCII), align).Print(os.Stdout)
+	tabulate(New(Unicode), align).Print(os.Stdout)
+	tabulate(New(Colon), align).Print(os.Stdout)
+	tabulate(New(Simple), align).Print(os.Stdout)
+	tabulate(New(Github), align).Print(os.Stdout)
+	tabulate(New(JSON), align).Print(os.Stdout)
 }
 
 func TestBorders(t *testing.T) {
@@ -55,7 +57,7 @@ et al`
 
 func TestCSV(t *testing.T) {
 	rows := strings.Split(csv, "|")
-	tabulateRows(NewCSV(), None, rows).Print(os.Stdout)
+	tabulateRows(New(CSV), None, rows).Print(os.Stdout)
 }
 
 var missingCols = `Year,Value
@@ -65,11 +67,11 @@ var missingCols = `Year,Value
 
 func TestMissingColumns(t *testing.T) {
 	rows := strings.Split(missingCols, "\n")
-	tabulateRows(NewUnicode(), TL, rows).Print(os.Stdout)
+	tabulateRows(New(Unicode), TL, rows).Print(os.Stdout)
 }
 
 func TestNested(t *testing.T) {
-	tab := NewUnicode()
+	tab := New(Unicode)
 
 	tab.Header("Key").SetAlign(MR)
 	tab.Header("Value").SetAlign(MC)
@@ -80,7 +82,7 @@ func TestNested(t *testing.T) {
 
 	row = tab.Row()
 	row.Column("Numbers")
-	row.ColumnData(tabulate(NewUnicode(), TR))
+	row.ColumnData(tabulate(New(Unicode), TR))
 
 	tab.Print(os.Stdout)
 }

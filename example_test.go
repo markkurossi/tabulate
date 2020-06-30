@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-func ExampleNewUnicode() {
-	tab := NewUnicode()
+func ExampleNew() {
+	tab := New(Unicode)
 
 	lines := strings.Split(`Year,Income,Source
 2018,100,Salary
@@ -39,11 +39,11 @@ func ExampleNewUnicode() {
 
 	// Output: ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┓
 	// ┃ Year ┃ Income ┃ Source       ┃
-	// ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━━━━━┫
-	// ┃ 2018 ┃ 100    ┃ Salary       ┃
-	// ┃ 2019 ┃ 110    ┃ Consultation ┃
-	// ┃ 2020 ┃ 200    ┃ Lottery      ┃
-	// ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━━━━━┛
+	// ┡━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━┩
+	// │ 2018 │ 100    │ Salary       │
+	// │ 2019 │ 110    │ Consultation │
+	// │ 2020 │ 200    │ Lottery      │
+	// └──────┴────────┴──────────────┘
 }
 
 func ExampleReflect() {
@@ -58,7 +58,7 @@ func ExampleReflect() {
 		Published int
 	}
 
-	tab := NewASCII()
+	tab := New(ASCII)
 	tab.Header("Key").SetAlign(ML)
 	tab.Header("Value")
 	err := Reflect(tab, 0, nil, &Book{
@@ -106,7 +106,7 @@ func ExampleReflect() {
 }
 
 func ExampleTabulate_MarshalJSON() {
-	tab := NewUnicode()
+	tab := New(Unicode)
 	tab.Header("Key").SetAlign(MR)
 	tab.Header("Value").SetAlign(ML)
 

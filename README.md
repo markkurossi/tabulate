@@ -5,6 +5,10 @@ visualizations. Tabulate works on tabular data. The data tables can be
 constructed explicity by calling the row and column functions, or with
 reflection from Go values.
 
+[![Build Status](https://img.shields.io/github/workflow/status/markkurossi/tabulate/Go)](https://github.com/markkurossi/tabulate/actions)
+[![Git Hub](https://img.shields.io/github/last-commit/markkurossi/tabulate.svg)](https://github.com/markkurossi/tabulate/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/markkurossi/tabulate)](https://goreportcard.com/report/github.com/markkurossi/tabulate)
+
 ## Programmatic table construction
 
 In the programmatic table construction, you first create a new table

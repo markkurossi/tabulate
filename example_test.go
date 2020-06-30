@@ -14,6 +14,33 @@ import (
 	"strings"
 )
 
+func ExampleTabulate_Row() {
+	tab := New(Unicode)
+	tab.Header("Year").SetAlign(MR)
+	tab.Header("Income").SetAlign(MR)
+
+	row := tab.Row()
+	row.Column("2018")
+	row.Column("100")
+
+	row = tab.Row()
+	row.Column("2019")
+	row.Column("110")
+
+	row = tab.Row()
+	row.Column("2020")
+	row.Column("200")
+
+	tab.Print(os.Stdout)
+	// Output: ┏━━━━━━┳━━━━━━━━┓
+	// ┃ Year ┃ Income ┃
+	// ┡━━━━━━╇━━━━━━━━┩
+	// │ 2018 │    100 │
+	// │ 2019 │    110 │
+	// │ 2020 │    200 │
+	// └──────┴────────┘
+}
+
 func ExampleNew() {
 	tab := New(Unicode)
 

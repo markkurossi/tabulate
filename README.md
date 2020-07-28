@@ -15,10 +15,9 @@ In the programmatic table construction, you first create a new table
 and define the headers with optional layout attributes:
 
 ```go
-tab := New(Unicode)
-tab.Header()
-tab.Header("Year").SetAlign(MR)
-tab.Header("Income").SetAlign(MR)
+tab := tabulate.New(tabulate.Unicode)
+tab.Header("Year").SetAlign(tabulate.MR)
+tab.Header("Income").SetAlign(tabulate.MR)
 ```
 
 After that, you add data rows:
@@ -71,10 +70,10 @@ type Book struct {
     Published int
 }
 
-tab := New(ASCII)
-tab.Header("Key").SetAlign(ML)
+tab := tabulate.New(tabulate.ASCII)
+tab.Header("Key").SetAlign(tabulate.ML)
 tab.Header("Value")
-err := Reflect(tab, 0, nil, &Book{
+err := tabulate.Reflect(tab, 0, nil, &Book{
     Title: "Structure and Interpretation of Computer Programs",
     Author: []Person{
         Person{
@@ -130,7 +129,7 @@ corresponding columns. The column default alignment is set when the
 headers are defined:
 
 ```go
-tab.Header("Year").SetAlign(MR)
+tab.Header("Year").SetAlign(tabulate.MR)
 ```
 
 The alignment is defined with the Align constants. The first character
@@ -156,7 +155,7 @@ the data column:
 
 ```go
 row = tab.Row()
-row.Column("Integer").SetAlign(TL)
+row.Column("Integer").SetAlign(tabulate.TL)
 ```
 
 # Output formats
@@ -253,9 +252,9 @@ marshal tabulated data directly into JSON.
 
 
 ```go
-tab := NewUnicode()
-tab.Header("Key").SetAlign(MR)
-tab.Header("Value").SetAlign(ML)
+tab := tabulate.New(tabulate.Unicode)
+tab.Header("Key").SetAlign(tabulate.MR)
+tab.Header("Value").SetAlign(tabulate.ML)
 
 row := tab.Row()
 row.Column("Boolean")

@@ -41,6 +41,8 @@ const (
 	Plain Style = iota
 	ASCII
 	Unicode
+	UnicodeLight
+	UnicodeBold
 	Colon
 	Simple
 	Github
@@ -92,6 +94,42 @@ var asciiBorder = Border{
 	BR: "+",
 }
 
+var unicodeLight = Border{
+	HT: "\u2500",
+	HM: "\u2500",
+	HB: "\u2500",
+	VL: "\u2502",
+	VM: "\u2502",
+	VR: "\u2502",
+	TL: "\u250C",
+	TM: "\u252c",
+	TR: "\u2510",
+	ML: "\u251C",
+	MM: "\u253C",
+	MR: "\u2524",
+	BL: "\u2514",
+	BM: "\u2534",
+	BR: "\u2518",
+}
+
+var unicodeBold = Border{
+	HT: "\u2501",
+	HM: "\u2501",
+	HB: "\u2501",
+	VL: "\u2503",
+	VM: "\u2503",
+	VR: "\u2503",
+	TL: "\u250F",
+	TM: "\u2533",
+	TR: "\u2513",
+	ML: "\u2523",
+	MM: "\u254B",
+	MR: "\u252B",
+	BL: "\u2517",
+	BM: "\u253B",
+	BR: "\u251B",
+}
+
 var borders = map[Style]Borders{
 	Plain: {},
 	ASCII: {
@@ -133,6 +171,14 @@ var borders = map[Style]Borders{
 			BM: "\u2534",
 			BR: "\u2518",
 		},
+	},
+	UnicodeLight: {
+		Header: unicodeLight,
+		Body:   unicodeLight,
+	},
+	UnicodeBold: {
+		Header: unicodeBold,
+		Body:   unicodeBold,
 	},
 	Colon: {
 		Header: Border{

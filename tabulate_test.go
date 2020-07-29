@@ -40,6 +40,8 @@ func align(align Align) {
 	tabulate(New(Plain), align).Print(os.Stdout)
 	tabulate(New(ASCII), align).Print(os.Stdout)
 	tabulate(New(Unicode), align).Print(os.Stdout)
+	tabulate(New(UnicodeLight), align).Print(os.Stdout)
+	tabulate(New(UnicodeBold), align).Print(os.Stdout)
 	tabulate(New(Colon), align).Print(os.Stdout)
 	tabulate(New(Simple), align).Print(os.Stdout)
 	tabulate(New(Github), align).Print(os.Stdout)

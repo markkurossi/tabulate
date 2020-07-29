@@ -195,6 +195,32 @@ drawing characters to render the table borders:
     │ 2020 │ 107    │ 50       │
     └──────┴────────┴──────────┘
 
+## UnicodeLight
+
+The UnicodeLight format creates a new tabulator that uses thin Unicode
+line drawing characters to render the table borders:
+
+    ┌──────┬────────┬──────────┐
+    │ Year │ Income │ Expenses │
+    ├──────┼────────┼──────────┤
+    │ 2018 │ 100    │ 90       │
+    │ 2019 │ 110    │ 85       │
+    │ 2020 │ 107    │ 50       │
+    └──────┴────────┴──────────┘
+
+## UnicodeBold
+
+The UnicodeBold format creates a new tabulator that uses thick Unicode
+line drawing characters to render the table borders:
+
+    ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+    ┃ Year ┃ Income ┃ Expenses ┃
+    ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━┫
+    ┃ 2018 ┃ 100    ┃ 90       ┃
+    ┃ 2019 ┃ 110    ┃ 85       ┃
+    ┃ 2020 ┃ 107    ┃ 50       ┃
+    ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+
 ## Colon
 
 The Colon format creates a new tabulator that uses colon (':')

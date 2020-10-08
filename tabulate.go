@@ -33,6 +33,27 @@ const (
 	None
 )
 
+var aligns = map[Align]string{
+	TL:   "TL",
+	TC:   "TC",
+	TR:   "TR",
+	ML:   "ML",
+	MC:   "MC",
+	MR:   "MR",
+	BL:   "BL",
+	BC:   "BC",
+	BR:   "BR",
+	None: "None",
+}
+
+func (a Align) String() string {
+	name, ok := aligns[a]
+	if ok {
+		return name
+	}
+	return fmt.Sprintf("{align %d}", a)
+}
+
 // Style specifies the table borders and rendering style.
 type Style int
 

@@ -13,7 +13,12 @@ import (
 )
 
 func TestJSONTimeSeries(t *testing.T) {
-	tab := tabulate(New(Plain), TL)
+	rows := `Year,Income,Expenses
+2018,100,90
+2019,110,85
+2020,107,50`
+
+	tab := tabulate(New(Plain), TL, rows)
 	data, err := json.MarshalIndent(tab, "", "  ")
 	if err != nil {
 		t.Fatalf("JSON marshal time series failed: %s", err)

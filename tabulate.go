@@ -398,48 +398,57 @@ func (t *Tabulate) Print(o io.Writer) {
 		fmt.Fprintln(o, t.Borders.Header.VR)
 	}
 
-	if len(t.Borders.Header.HM) > 0 {
-		fmt.Fprint(o, t.Borders.Header.ML)
-		for idx, width := range widths {
-			for i := 0; i < width+t.Padding; i++ {
-				fmt.Fprint(o, t.Borders.Header.HM)
-			}
-			if idx+1 < len(widths) {
-				fmt.Fprint(o, t.Borders.Header.MM)
-			} else {
-				fmt.Fprintln(o, t.Borders.Header.MR)
-			}
-		}
-	}
+	var bottomBorder Border
 
-	// Data rows.
-	for _, row := range t.Rows {
-		height = row.Height()
-
-		for line := 0; line < height; line++ {
+	if len(t.Rows) > 0 {
+		if len(t.Borders.Header.HM) > 0 {
+			fmt.Fprint(o, t.Borders.Header.ML)
 			for idx, width := range widths {
-				var col *Column
-				if idx < len(row.Columns) {
-					col = row.Columns[idx]
-				} else {
-					col = &Column{}
+				for i := 0; i < width+t.Padding; i++ {
+					fmt.Fprint(o, t.Borders.Header.HM)
 				}
-				t.printColumn(o, false, col, idx, line, width, height)
+				if idx+1 < len(widths) {
+					fmt.Fprint(o, t.Borders.Header.MM)
+				} else {
+					fmt.Fprintln(o, t.Borders.Header.MR)
+				}
 			}
-			fmt.Fprintln(o, t.Borders.Body.VR)
 		}
+
+		// Data rows.
+		for _, row := range t.Rows {
+			height = row.Height()
+
+			for line := 0; line < height; line++ {
+				for idx, width := range widths {
+					var col *Column
+					if idx < len(row.Columns) {
+						col = row.Columns[idx]
+					} else {
+						col = &Column{}
+					}
+					t.printColumn(o, false, col, idx, line, width, height)
+				}
+				fmt.Fprintln(o, t.Borders.Body.VR)
+			}
+		}
+		// Use the body graphics to close the table.
+		bottomBorder = t.Borders.Body
+	} else {
+		// No data rows. Use the header graphics to close the table.
+		bottomBorder = t.Borders.Header
 	}
 
-	if len(t.Borders.Body.HB) > 0 {
-		fmt.Fprint(o, t.Borders.Body.BL)
+	if len(bottomBorder.HB) > 0 {
+		fmt.Fprint(o, bottomBorder.BL)
 		for idx, width := range widths {
 			for i := 0; i < width+t.Padding; i++ {
-				fmt.Fprint(o, t.Borders.Body.HB)
+				fmt.Fprint(o, bottomBorder.HB)
 			}
 			if idx+1 < len(widths) {
-				fmt.Fprint(o, t.Borders.Body.BM)
+				fmt.Fprint(o, bottomBorder.BM)
 			} else {
-				fmt.Fprintln(o, t.Borders.Body.BR)
+				fmt.Fprintln(o, bottomBorder.BR)
 			}
 		}
 	}

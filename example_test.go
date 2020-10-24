@@ -41,6 +41,16 @@ func ExampleTabulate_Row() {
 	// └──────┴────────┘
 }
 
+func ExampleTabulate_Header() {
+	tab := New(Unicode)
+	tab.Header("Year").SetAlign(MR)
+	tab.Header("Income").SetAlign(MR)
+	tab.Print(os.Stdout)
+	// Output: ┏━━━━━━┳━━━━━━━━┓
+	// ┃ Year ┃ Income ┃
+	// ┗━━━━━━┻━━━━━━━━┛
+}
+
 func ExampleNew() {
 	tab := New(Unicode)
 

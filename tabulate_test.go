@@ -12,11 +12,6 @@ import (
 	"testing"
 )
 
-var data = `Year,Income,Expenses
-2018,100,90
-2019,110,85
-2020,107,50`
-
 func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 
 	for _, hdr := range strings.Split(rows[0], ",") {
@@ -32,26 +27,37 @@ func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 	return tab
 }
 
-func tabulate(tab *Tabulate, align Align) *Tabulate {
+func tabulate(tab *Tabulate, align Align, data string) *Tabulate {
 	return tabulateRows(tab, align, strings.Split(data, "\n"))
 }
 
-func align(align Align) {
-	tabulate(New(Plain), align).Print(os.Stdout)
-	tabulate(New(ASCII), align).Print(os.Stdout)
-	tabulate(New(Unicode), align).Print(os.Stdout)
-	tabulate(New(UnicodeLight), align).Print(os.Stdout)
-	tabulate(New(UnicodeBold), align).Print(os.Stdout)
-	tabulate(New(Colon), align).Print(os.Stdout)
-	tabulate(New(Simple), align).Print(os.Stdout)
-	tabulate(New(Github), align).Print(os.Stdout)
-	tabulate(New(JSON), align).Print(os.Stdout)
+func align(align Align, data string) {
+	tabulate(New(Plain), align, data).Print(os.Stdout)
+	tabulate(New(ASCII), align, data).Print(os.Stdout)
+	tabulate(New(Unicode), align, data).Print(os.Stdout)
+	tabulate(New(UnicodeLight), align, data).Print(os.Stdout)
+	tabulate(New(UnicodeBold), align, data).Print(os.Stdout)
+	tabulate(New(Colon), align, data).Print(os.Stdout)
+	tabulate(New(Simple), align, data).Print(os.Stdout)
+	tabulate(New(Github), align, data).Print(os.Stdout)
+	tabulate(New(JSON), align, data).Print(os.Stdout)
 }
 
 func TestBorders(t *testing.T) {
-	align(TL)
-	align(MC)
-	align(BR)
+	data := `Year,Income,Expenses
+2018,100,90
+2019,110,85
+2020,107,50`
+
+	align(TL, data)
+	align(MC, data)
+	align(BR, data)
+}
+
+func TestEmpty(t *testing.T) {
+	data := `Year,Income,Expenses`
+
+	align(TL, data)
 }
 
 var csv = `Year,Income,Source|2018,100,Salary|2019,110,"Consultation"|2020,120,Lottery
@@ -84,7 +90,13 @@ func TestNested(t *testing.T) {
 
 	row = tab.Row()
 	row.Column("Numbers")
-	row.ColumnData(tabulate(New(Unicode), TR))
+
+	data := `Year,Income,Expenses
+2018,100,90
+2019,110,85
+2020,107,50`
+
+	row.ColumnData(tabulate(New(Unicode), TR, data))
 
 	tab.Print(os.Stdout)
 }

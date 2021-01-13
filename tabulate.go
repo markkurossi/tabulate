@@ -342,6 +342,10 @@ func (t *Tabulate) Row() *Row {
 
 // Print layouts the table into the argument io.Writer.
 func (t *Tabulate) Print(o io.Writer) {
+	if len(t.Headers) == 0 {
+		// No columns to tabulate.
+		return
+	}
 	if t.Output != nil {
 		t.Output(t, o)
 		return

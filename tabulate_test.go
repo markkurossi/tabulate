@@ -28,6 +28,9 @@ func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 }
 
 func tabulate(tab *Tabulate, align Align, data string) *Tabulate {
+	if len(data) == 0 {
+		return tab
+	}
 	return tabulateRows(tab, align, strings.Split(data, "\n"))
 }
 
@@ -56,8 +59,11 @@ func TestBorders(t *testing.T) {
 
 func TestEmpty(t *testing.T) {
 	data := `Year,Income,Expenses`
-
 	align(TL, data)
+}
+
+func TestNoColumns(t *testing.T) {
+	align(TL, "")
 }
 
 var csv = `Year,Income,Source|2018,100,Salary|2019,110,"Consultation"|2020,120,Lottery

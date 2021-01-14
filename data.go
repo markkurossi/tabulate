@@ -19,7 +19,7 @@ var (
 
 // Data contains table cell data.
 type Data interface {
-	Width() int
+	Width(m Measure) int
 	Height() int
 	Content(row int) string
 	String() string
@@ -41,8 +41,8 @@ func NewValue(v interface{}) *Value {
 }
 
 // Width implements the Data.Width().
-func (v *Value) Width() int {
-	return len([]rune(v.string))
+func (v *Value) Width(m Measure) int {
+	return m(v.string)
 }
 
 // Height implements the Data.Height().
@@ -64,8 +64,7 @@ func (v *Value) String() string {
 
 // Lines implements the Data interface over an array of lines.
 type Lines struct {
-	MaxWidth int
-	Lines    []string
+	Lines []string
 }
 
 // NewLines creates a new Lines data from the argument string. The
@@ -77,31 +76,28 @@ func NewLines(str string) *Lines {
 
 // NewLinesData creates a new Lines data from the array of strings.
 func NewLinesData(lines []string) *Lines {
-	var max int
-	for _, line := range lines {
-		l := len([]rune(line))
-		if l > max {
-			max = l
-		}
-	}
-
 	return &Lines{
-		MaxWidth: max,
-		Lines:    lines,
+		Lines: lines,
 	}
 }
 
 // NewText creates a new Lines data, containing one line.
 func NewText(str string) *Lines {
 	return &Lines{
-		MaxWidth: len([]rune(str)),
-		Lines:    []string{str},
+		Lines: []string{str},
 	}
 }
 
 // Width implements the Data.Width().
-func (lines *Lines) Width() int {
-	return lines.MaxWidth
+func (lines *Lines) Width(m Measure) int {
+	var max int
+	for _, l := range lines.Lines {
+		w := m(l)
+		if w > max {
+			max = w
+		}
+	}
+	return max
 }
 
 // Height implements the Data.Height().
@@ -132,17 +128,12 @@ func NewArray(maxWidth int) *Array {
 // Array implements the Data interface for an array of Data elements.
 type Array struct {
 	maxWidth int
-	width    int
 	height   int
 	content  []Data
 	lines    []string
 }
 
 func (arr *Array) addLine(line string) {
-	l := len([]rune(line))
-	if l > arr.width {
-		arr.width = l
-	}
 	arr.lines = append(arr.lines, line)
 }
 
@@ -188,9 +179,17 @@ func (arr *Array) Append(data Data) {
 }
 
 // Width implements the Data.Width().
-func (arr *Array) Width() int {
+func (arr *Array) Width(m Measure) int {
 	arr.layout()
-	return arr.width
+
+	var max int
+	for _, l := range arr.lines {
+		w := m(l)
+		if w > max {
+			max = w
+		}
+	}
+	return max
 }
 
 // Height implements the Data.Height().

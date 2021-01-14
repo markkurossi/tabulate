@@ -253,13 +253,17 @@ var borders = map[Style]Borders{
 type Tabulate struct {
 	Padding int
 	Borders Borders
-	Measure func(column string) int
+	Measure Measure
 	Escape  Escape
 	Output  func(t *Tabulate, o io.Writer)
 	Headers []*Column
 	Rows    []*Row
 	asData  Data
 }
+
+// Measure returns the column width in display units. This can be used
+// to remove any non-printable formatting codes from the value.
+type Measure func(column string) int
 
 // Escape is an escape function for converting table cell value into
 // the output format.
@@ -357,8 +361,9 @@ func (t *Tabulate) Print(o io.Writer) {
 	widths := make([]int, len(t.Headers))
 
 	for idx, hdr := range t.Headers {
-		if hdr.Data.Width() > widths[idx] {
-			widths[idx] = hdr.Data.Width()
+		w := hdr.Data.Width(t.Measure)
+		if w > widths[idx] {
+			widths[idx] = w
 		}
 	}
 	for _, row := range t.Rows {
@@ -366,8 +371,9 @@ func (t *Tabulate) Print(o io.Writer) {
 			if idx >= len(widths) {
 				widths = append(widths, 0)
 			}
-			if col.Width() > widths[idx] {
-				widths[idx] = col.Width()
+			w := col.Width(t.Measure)
+			if w > widths[idx] {
+				widths[idx] = w
 			}
 		}
 	}
@@ -544,8 +550,8 @@ func (t *Tabulate) data() Data {
 }
 
 // Width implements the Data.Width().
-func (t *Tabulate) Width() int {
-	return t.data().Width()
+func (t *Tabulate) Width(m Measure) int {
+	return t.data().Width(m)
 }
 
 // Height implements the Data.Height().
@@ -637,11 +643,11 @@ func (col *Column) SetFormat(format Format) *Column {
 }
 
 // Width returns the column width in runes.
-func (col *Column) Width() int {
+func (col *Column) Width(m Measure) int {
 	if col.Data == nil {
 		return 0
 	}
-	return col.Data.Width()
+	return col.Data.Width(m)
 }
 
 // Height returns the column heigh in lines.

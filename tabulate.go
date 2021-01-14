@@ -253,6 +253,7 @@ var borders = map[Style]Borders{
 type Tabulate struct {
 	Padding int
 	Borders Borders
+	Measure func(column string) int
 	Escape  Escape
 	Output  func(t *Tabulate, o io.Writer)
 	Headers []*Column
@@ -270,6 +271,9 @@ func New(style Style) *Tabulate {
 	tab := &Tabulate{
 		Padding: 2,
 		Borders: borders[style],
+		Measure: func(column string) int {
+			return len([]rune(column))
+		},
 	}
 	switch style {
 	case Colon, Simple:
@@ -483,7 +487,7 @@ func (t *Tabulate) printColumn(o io.Writer, hdr bool, col *Column,
 	lPad := t.Padding / 2
 	rPad := t.Padding - lPad
 
-	pad := width - len([]rune(content))
+	pad := width - t.Measure(content)
 	switch col.Align {
 	case None:
 		lPad = 0
@@ -565,6 +569,7 @@ func (t *Tabulate) Clone() *Tabulate {
 	return &Tabulate{
 		Padding: t.Padding,
 		Borders: t.Borders,
+		Measure: t.Measure,
 		Escape:  t.Escape,
 		Headers: t.Headers,
 	}

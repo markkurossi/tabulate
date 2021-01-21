@@ -71,6 +71,20 @@ const (
 	JSON
 )
 
+// Styles list all supported tabulation types.
+var Styles = map[string]Style{
+	"plain":   Plain,
+	"ascii:":  ASCII,
+	"uc":      Unicode,
+	"uclight": UnicodeLight,
+	"ucbold":  UnicodeBold,
+	"colon":   Colon,
+	"simple":  Simple,
+	"github":  Github,
+	"csv":     CSV,
+	"json":    JSON,
+}
+
 // Border specifies the table border drawing elements.
 type Border struct {
 	HT string

@@ -66,6 +66,7 @@ const (
 	UnicodeBold
 	Colon
 	Simple
+	SimpleUnicode
 	Github
 	CSV
 	JSON
@@ -73,16 +74,17 @@ const (
 
 // Styles list all supported tabulation types.
 var Styles = map[string]Style{
-	"plain":   Plain,
-	"ascii:":  ASCII,
-	"uc":      Unicode,
-	"uclight": UnicodeLight,
-	"ucbold":  UnicodeBold,
-	"colon":   Colon,
-	"simple":  Simple,
-	"github":  Github,
-	"csv":     CSV,
-	"json":    JSON,
+	"plain":    Plain,
+	"ascii:":   ASCII,
+	"uc":       Unicode,
+	"uclight":  UnicodeLight,
+	"ucbold":   UnicodeBold,
+	"colon":    Colon,
+	"simple":   Simple,
+	"simpleuc": SimpleUnicode,
+	"github":   Github,
+	"csv":      CSV,
+	"json":     JSON,
 }
 
 // Border specifies the table border drawing elements.
@@ -226,12 +228,23 @@ var borders = map[Style]Borders{
 	Simple: {
 		Header: Border{
 			HM: "-",
-			VM: "  ",
-			MM: "  ",
+			VM: " ",
+			MM: " ",
 		},
 		Body: Border{
-			VM: "  ",
-			MM: "  ",
+			VM: " ",
+			MM: " ",
+		},
+	},
+	SimpleUnicode: {
+		Header: Border{
+			HM: "\u2501",
+			VM: " ",
+			MM: " ",
+		},
+		Body: Border{
+			VM: " ",
+			MM: " ",
 		},
 	},
 	Github: {

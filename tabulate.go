@@ -67,6 +67,7 @@ const (
 	Colon
 	Simple
 	SimpleUnicode
+	SimpleUnicodeBold
 	Github
 	CSV
 	JSON
@@ -74,17 +75,18 @@ const (
 
 // Styles list all supported tabulation types.
 var Styles = map[string]Style{
-	"plain":    Plain,
-	"ascii:":   ASCII,
-	"uc":       Unicode,
-	"uclight":  UnicodeLight,
-	"ucbold":   UnicodeBold,
-	"colon":    Colon,
-	"simple":   Simple,
-	"simpleuc": SimpleUnicode,
-	"github":   Github,
-	"csv":      CSV,
-	"json":     JSON,
+	"plain":        Plain,
+	"ascii:":       ASCII,
+	"uc":           Unicode,
+	"uclight":      UnicodeLight,
+	"ucbold":       UnicodeBold,
+	"colon":        Colon,
+	"simple":       Simple,
+	"simpleuc":     SimpleUnicode,
+	"simpleucbold": SimpleUnicodeBold,
+	"github":       Github,
+	"csv":          CSV,
+	"json":         JSON,
 }
 
 // Border specifies the table border drawing elements.
@@ -238,6 +240,17 @@ var borders = map[Style]Borders{
 	},
 	SimpleUnicode: {
 		Header: Border{
+			HM: "\u2500",
+			VM: " ",
+			MM: " ",
+		},
+		Body: Border{
+			VM: " ",
+			MM: " ",
+		},
+	},
+	SimpleUnicodeBold: {
+		Header: Border{
 			HM: "\u2501",
 			VM: " ",
 			MM: " ",
@@ -307,7 +320,7 @@ func New(style Style) *Tabulate {
 		},
 	}
 	switch style {
-	case Colon, Simple:
+	case Colon, Simple, SimpleUnicode, SimpleUnicodeBold:
 		tab.Padding = 0
 	case CSV:
 		tab.Padding = 0

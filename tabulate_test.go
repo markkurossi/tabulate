@@ -42,6 +42,8 @@ func align(align Align, data string) {
 	tabulate(New(UnicodeBold), align, data).Print(os.Stdout)
 	tabulate(New(Colon), align, data).Print(os.Stdout)
 	tabulate(New(Simple), align, data).Print(os.Stdout)
+	tabulate(New(SimpleUnicode), align, data).Print(os.Stdout)
+	tabulate(New(SimpleUnicodeBold), align, data).Print(os.Stdout)
 	tabulate(New(Github), align, data).Print(os.Stdout)
 	tabulate(New(JSON), align, data).Print(os.Stdout)
 }

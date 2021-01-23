@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 )
 
@@ -76,7 +77,7 @@ const (
 // Styles list all supported tabulation types.
 var Styles = map[string]Style{
 	"plain":        Plain,
-	"ascii:":       ASCII,
+	"ascii":        ASCII,
 	"uc":           Unicode,
 	"uclight":      UnicodeLight,
 	"ucbold":       UnicodeBold,
@@ -87,6 +88,16 @@ var Styles = map[string]Style{
 	"github":       Github,
 	"csv":          CSV,
 	"json":         JSON,
+}
+
+// StyleNames returns the tabulation style names as a sorted slice.
+func StyleNames() []string {
+	var names []string
+	for name := range Styles {
+		names = append(names, name)
+	}
+	sort.Slice(names, func(i, j int) bool { return names[i] < names[j] })
+	return names
 }
 
 // Border specifies the table border drawing elements.

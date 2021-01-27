@@ -302,14 +302,15 @@ var borders = map[Style]Borders{
 
 // Tabulate defined a tabulator instance.
 type Tabulate struct {
-	Padding int
-	Borders Borders
-	Measure Measure
-	Escape  Escape
-	Output  func(t *Tabulate, o io.Writer)
-	Headers []*Column
-	Rows    []*Row
-	asData  Data
+	Padding     int
+	TrimColumns bool
+	Borders     Borders
+	Measure     Measure
+	Escape      Escape
+	Output      func(t *Tabulate, o io.Writer)
+	Headers     []*Column
+	Rows        []*Row
+	asData      Data
 }
 
 // Measure returns the column width in display units. This can be used
@@ -335,9 +336,11 @@ func New(style Style) *Tabulate {
 		tab.Padding = 0
 	case CSV:
 		tab.Padding = 0
+		tab.TrimColumns = true
 		tab.Escape = escapeCSV
 	case JSON:
 		tab.Padding = 0
+		tab.TrimColumns = true
 		tab.Output = outputJSON
 	}
 	return tab
@@ -545,6 +548,9 @@ func (t *Tabulate) printColumn(o io.Writer, hdr bool, col *Column,
 	rPad := t.Padding - lPad
 
 	pad := width - t.Measure(content)
+	if t.TrimColumns {
+		pad = 0
+	}
 	switch col.Align {
 	case None:
 		lPad = 0

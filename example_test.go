@@ -14,6 +14,30 @@ import (
 	"strings"
 )
 
+func tabulateStyle(style Style) *Tabulate {
+	tab := New(style)
+	tab.Header("Year").SetAlign(MR)
+	tab.Header("Income").SetAlign(MR)
+
+	row := tab.Row()
+	row.Column("2018")
+	row.Column("100")
+
+	row = tab.Row()
+	row.Column("2019")
+	row.Column("110")
+
+	row = tab.Row()
+	row.Column("2020")
+	row.Column("200")
+
+	return tab
+}
+
+func ExampleStyle_csv() {
+	tabulateStyle(CSV).Print(os.Stdout)
+}
+
 func ExampleTabulate_Row() {
 	tab := New(Unicode)
 	tab.Header("Year").SetAlign(MR)

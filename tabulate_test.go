@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -105,6 +105,21 @@ func TestNested(t *testing.T) {
 2020,107,50`
 
 	row.ColumnData(tabulate(New(Unicode), TR, data))
+
+	tab.Print(os.Stdout)
+}
+
+func TestWide(t *testing.T) {
+	tab := New(ASCII)
+
+	tab.Header("我")
+	tab.Header("是")
+	tab.Header("测试")
+
+	row := tab.Row()
+	row.Column("a")
+	row.Column("a")
+	row.Column("a")
 
 	tab.Print(os.Stdout)
 }

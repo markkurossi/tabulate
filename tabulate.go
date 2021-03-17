@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -12,6 +12,8 @@ import (
 	"io"
 	"sort"
 	"strings"
+
+	"golang.org/x/text/width"
 )
 
 // Align specifies cell alignment in horizontal and vertical
@@ -317,6 +319,28 @@ type Tabulate struct {
 // to remove any non-printable formatting codes from the value.
 type Measure func(column string) int
 
+// MeasureRunes measures the column width by counting its runes. This
+// assumes that all runes have the same width consuming single output
+// column cell.
+func MeasureRunes(column string) int {
+	return len([]rune(column))
+}
+
+// MeasureUnicode measures the column width by taking into
+// consideration East Asian Wide characters. The function assumes that
+// East Asian Wide characters consume two output column cells.
+func MeasureUnicode(column string) int {
+	var w int
+	for _, r := range column {
+		if width.LookupRune(r).Kind() == width.EastAsianWide {
+			w += 2
+		} else {
+			w++
+		}
+	}
+	return w
+}
+
 // Escape is an escape function for converting table cell value into
 // the output format.
 type Escape func(string) string
@@ -327,9 +351,7 @@ func New(style Style) *Tabulate {
 	tab := &Tabulate{
 		Padding: 2,
 		Borders: borders[style],
-		Measure: func(column string) int {
-			return len([]rune(column))
-		},
+		Measure: MeasureUnicode,
 	}
 	switch style {
 	case Colon, Simple, SimpleUnicode, SimpleUnicodeBold:

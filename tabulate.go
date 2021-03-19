@@ -310,6 +310,7 @@ type Tabulate struct {
 	Measure     Measure
 	Escape      Escape
 	Output      func(t *Tabulate, o io.Writer)
+	Defaults    []Align
 	Headers     []*Column
 	Rows        []*Row
 	asData      Data
@@ -399,6 +400,15 @@ func outputJSON(t *Tabulate, o io.Writer) {
 	fmt.Fprintln(o)
 }
 
+// SetDefaults sets the column default attributes. These are used if
+// the table does not have headers.
+func (t *Tabulate) SetDefaults(col int, align Align) {
+	for len(t.Defaults) <= col {
+		t.Defaults = append(t.Defaults, TL)
+	}
+	t.Defaults[col] = align
+}
+
 // Header adds a new column to the table and specifies its header
 // label.
 func (t *Tabulate) Header(label string) *Column {
@@ -426,7 +436,7 @@ func (t *Tabulate) Row() *Row {
 
 // Print layouts the table into the argument io.Writer.
 func (t *Tabulate) Print(o io.Writer) {
-	if len(t.Headers) == 0 {
+	if len(t.Headers) == 0 && len(t.Rows) == 0 {
 		// No columns to tabulate.
 		return
 	}
@@ -434,8 +444,8 @@ func (t *Tabulate) Print(o io.Writer) {
 		t.Output(t, o)
 		return
 	}
+	// Measure columns.
 	widths := make([]int, len(t.Headers))
-
 	for idx, hdr := range t.Headers {
 		w := hdr.Data.Width(t.Measure)
 		if w > widths[idx] {
@@ -454,60 +464,79 @@ func (t *Tabulate) Print(o io.Writer) {
 		}
 	}
 
-	// Header.
-	if len(t.Borders.Header.HT) > 0 {
-		fmt.Fprint(o, t.Borders.Header.TL)
-		for idx, width := range widths {
-			for i := 0; i < width+t.Padding; i++ {
-				fmt.Fprint(o, t.Borders.Header.HT)
-			}
-			if idx+1 < len(widths) {
-				fmt.Fprint(o, t.Borders.Header.TM)
-			} else {
-				fmt.Fprintln(o, t.Borders.Header.TR)
+	if len(t.Headers) > 0 {
+		if len(t.Borders.Header.HT) > 0 {
+			fmt.Fprint(o, t.Borders.Header.TL)
+			for idx, width := range widths {
+				for i := 0; i < width+t.Padding; i++ {
+					fmt.Fprint(o, t.Borders.Header.HT)
+				}
+				if idx+1 < len(widths) {
+					fmt.Fprint(o, t.Borders.Header.TM)
+				} else {
+					fmt.Fprintln(o, t.Borders.Header.TR)
+				}
 			}
 		}
-	}
 
-	var height int
-	for _, hdr := range t.Headers {
-		if hdr.Data.Height() > height {
-			height = hdr.Data.Height()
-		}
-	}
-	for line := 0; line < height; line++ {
-		for idx, width := range widths {
-			var hdr *Column
-			if idx < len(t.Headers) {
-				hdr = t.Headers[idx]
-			} else {
-				hdr = &Column{}
+		var height int
+		for _, hdr := range t.Headers {
+			if hdr.Data.Height() > height {
+				height = hdr.Data.Height()
 			}
-			t.printColumn(o, true, hdr, idx, line, width, height)
 		}
-		fmt.Fprintln(o, t.Borders.Header.VR)
+		for line := 0; line < height; line++ {
+			for idx, width := range widths {
+				var hdr *Column
+				if idx < len(t.Headers) {
+					hdr = t.Headers[idx]
+				} else {
+					hdr = &Column{}
+				}
+				t.printColumn(o, true, hdr, idx, line, width, height)
+			}
+			fmt.Fprintln(o, t.Borders.Header.VR)
+		}
 	}
 
 	var bottomBorder Border
 
 	if len(t.Rows) > 0 {
-		if len(t.Borders.Header.HM) > 0 {
-			fmt.Fprint(o, t.Borders.Header.ML)
-			for idx, width := range widths {
-				for i := 0; i < width+t.Padding; i++ {
-					fmt.Fprint(o, t.Borders.Header.HM)
+		if len(t.Headers) > 0 {
+			// Both headers and rows.
+			if len(t.Borders.Header.HM) > 0 {
+				fmt.Fprint(o, t.Borders.Header.ML)
+				for idx, width := range widths {
+					for i := 0; i < width+t.Padding; i++ {
+						fmt.Fprint(o, t.Borders.Header.HM)
+					}
+					if idx+1 < len(widths) {
+						fmt.Fprint(o, t.Borders.Header.MM)
+					} else {
+						fmt.Fprintln(o, t.Borders.Header.MR)
+					}
 				}
-				if idx+1 < len(widths) {
-					fmt.Fprint(o, t.Borders.Header.MM)
-				} else {
-					fmt.Fprintln(o, t.Borders.Header.MR)
+			}
+		} else {
+			// Only rows.
+			if len(t.Borders.Body.HT) > 0 {
+				fmt.Fprint(o, t.Borders.Body.TL)
+				for idx, width := range widths {
+					for i := 0; i < width+t.Padding; i++ {
+						fmt.Fprint(o, t.Borders.Body.HT)
+					}
+					if idx+1 < len(widths) {
+						fmt.Fprint(o, t.Borders.Body.TM)
+					} else {
+						fmt.Fprintln(o, t.Borders.Body.TR)
+					}
 				}
 			}
 		}
 
 		// Data rows.
 		for _, row := range t.Rows {
-			height = row.Height()
+			height := row.Height()
 
 			for line := 0; line < height; line++ {
 				for idx, width := range widths {
@@ -652,11 +681,13 @@ func (t *Tabulate) String() string {
 // original tabulator.
 func (t *Tabulate) Clone() *Tabulate {
 	return &Tabulate{
-		Padding: t.Padding,
-		Borders: t.Borders,
-		Measure: t.Measure,
-		Escape:  t.Escape,
-		Headers: t.Headers,
+		Padding:     t.Padding,
+		TrimColumns: t.TrimColumns,
+		Borders:     t.Borders,
+		Measure:     t.Measure,
+		Escape:      t.Escape,
+		Defaults:    t.Defaults,
+		Headers:     t.Headers,
 	}
 }
 
@@ -688,6 +719,10 @@ func (r *Row) ColumnData(data Data) *Column {
 	var hdr *Column
 	if idx < len(r.Tab.Headers) {
 		hdr = r.Tab.Headers[idx]
+	} else if idx < len(r.Tab.Defaults) {
+		hdr = &Column{
+			Align: r.Tab.Defaults[idx],
+		}
 	} else {
 		hdr = &Column{}
 	}

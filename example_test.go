@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -122,7 +122,7 @@ func ExampleReflect() {
 	tab := New(ASCII)
 	tab.Header("Key").SetAlign(ML)
 	tab.Header("Value")
-	err := Reflect(tab, 0, nil, &Book{
+	err := Reflect(tab, InheritHeaders, nil, &Book{
 		Title: "Structure and Interpretation of Computer Programs",
 		Author: []Person{
 			{
@@ -164,6 +164,47 @@ func ExampleReflect() {
 	// | Publisher | MIT Press                                         |
 	// | Published | 1985                                              |
 	// +-----------+---------------------------------------------------+
+}
+
+func ExampleArray() {
+	tab, err := Array(New(ASCII), [][]interface{}{
+		{"a", "b", "c"},
+		{"1", "2", "3"},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	tab.Print(os.Stdout)
+	// Output: +---+---+---+
+	// | a | b | c |
+	// +---+---+---+
+	// | 1 | 2 | 3 |
+	// +---+---+---+
+}
+
+func ExampleArray_second() {
+	tab, err := Array(New(Unicode), [][]interface{}{
+		{"int", "float", "struct"},
+		{42, 3.14, struct {
+			ival   int
+			strval string
+		}{
+			ival:   42,
+			strval: "Hello, world!",
+		}},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	tab.Print(os.Stdout)
+	// Output: ┏━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+	// ┃ int ┃ float ┃ struct                     ┃
+	// ┡━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+	// │ 42  │ 3.14  │ ┌────────┬───────────────┐ │
+	// │     │       │ │ ival   │ 42            │ │
+	// │     │       │ │ strval │ Hello, world! │ │
+	// │     │       │ └────────┴───────────────┘ │
+	// └─────┴───────┴────────────────────────────┘
 }
 
 func ExampleTabulate_MarshalJSON() {

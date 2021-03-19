@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -60,7 +60,7 @@ func (v *Value) marshalJSON() (interface{}, error) {
 	return v.value, nil
 }
 
-func (arr *Array) marshalJSON() (interface{}, error) {
+func (arr *Slice) marshalJSON() (interface{}, error) {
 	var content []interface{}
 
 	for _, data := range arr.content {

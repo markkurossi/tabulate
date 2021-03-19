@@ -14,8 +14,10 @@ import (
 
 func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 
-	for _, hdr := range strings.Split(rows[0], ",") {
-		tab.Header(hdr).SetAlign(align)
+	if len(rows[0]) > 0 {
+		for _, hdr := range strings.Split(rows[0], ",") {
+			tab.Header(hdr).SetAlign(align)
+		}
 	}
 
 	for i := 1; i < len(rows); i++ {
@@ -61,6 +63,15 @@ func TestBorders(t *testing.T) {
 
 func TestEmpty(t *testing.T) {
 	data := `Year,Income,Expenses`
+	align(TL, data)
+}
+
+func TestRowsOnly(t *testing.T) {
+	data := `
+2018,100,90
+2019,110,85
+2020,107,50`
+
 	align(TL, data)
 }
 

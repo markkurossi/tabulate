@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -184,4 +184,16 @@ func TestReflectTextMarshaler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Reflect failed: %s", err)
 	}
+}
+
+func TestReflectArray(t *testing.T) {
+	fmt.Printf("TestReflectArray\n")
+	tab, err := Array(New(ASCII), [][]interface{}{
+		{"a", "b", "c"},
+		{"1", "2", "3"},
+	})
+	if err != nil {
+		t.Fatalf("Array failed: %s", err)
+	}
+	tab.Print(os.Stdout)
 }

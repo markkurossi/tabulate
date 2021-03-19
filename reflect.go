@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -21,6 +21,7 @@ type Flags int
 // Flag values for reflection tabulation.
 const (
 	OmitEmpty Flags = 1 << iota
+	InheritHeaders
 )
 
 const nilLabel = "<nil>"
@@ -61,6 +62,39 @@ func Reflect(tab *Tabulate, flags Flags, tags []string, v interface{}) error {
 	row.ColumnData(data)
 
 	return nil
+}
+
+// Array tabulates the argument v into rows and columns. If the tab
+// defines header columns, those will be used. Otherwise the first row
+// of v defines the header columns.
+func Array(tab *Tabulate, v [][]interface{}) (*Tabulate, error) {
+	flags := OmitEmpty
+	tags := make(map[string]bool)
+
+	if len(tab.Headers) == 0 {
+		if len(v) == 0 {
+			return tab, nil
+		}
+		for _, c := range v[0] {
+			data, err := reflectValue(tab, flags, tags, reflect.ValueOf(c))
+			if err != nil {
+				return nil, err
+			}
+			tab.HeaderData(data)
+		}
+		v = v[1:]
+	}
+	for _, r := range v {
+		row := tab.Row()
+		for _, c := range r {
+			data, err := reflectValue(tab, flags, tags, reflect.ValueOf(c))
+			if err != nil {
+				return nil, err
+			}
+			row.ColumnData(data)
+		}
+	}
+	return tab, nil
 }
 
 func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
@@ -115,6 +149,9 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	case reflect.Map:
 		if value.Len() > 0 || flags&OmitEmpty == 0 {
 			sub := tab.Clone()
+			if flags&InheritHeaders == 0 {
+				sub.Headers = nil
+			}
 			err := reflectMap(sub, flags, tags, value)
 			if err != nil {
 				return nil, err
@@ -143,6 +180,9 @@ func reflectValue(tab *Tabulate, flags Flags, tags map[string]bool,
 
 	case reflect.Struct:
 		sub := tab.Clone()
+		if flags&InheritHeaders == 0 {
+			sub.Headers = nil
+		}
 		err := reflectStruct(sub, flags, tags, value)
 		if err != nil {
 			return nil, err
@@ -182,7 +222,7 @@ func reflectByteSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 func reflectSliceValue(tab *Tabulate, flags Flags, tags map[string]bool,
 	width int, value reflect.Value) (Data, error) {
 
-	data := NewArray(width)
+	data := NewSlice(width)
 loop:
 	for i := 0; i < value.Len(); i++ {
 		v := value.Index(i)
@@ -199,6 +239,9 @@ loop:
 		switch v.Type().Kind() {
 		case reflect.Struct:
 			sub := tab.Clone()
+			if flags&InheritHeaders == 0 {
+				sub.Headers = nil
+			}
 			err := reflectStruct(sub, flags, tags, v)
 			if err != nil {
 				return nil, err

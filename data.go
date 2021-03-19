@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -14,7 +14,7 @@ import (
 var (
 	_ = Data((&Value{}))
 	_ = Data((&Lines{}))
-	_ = Data((&Array{}))
+	_ = Data((&Slice{}))
 )
 
 // Data contains table cell data.
@@ -117,27 +117,27 @@ func (lines *Lines) String() string {
 	return strings.Join(lines.Lines, "\n")
 }
 
-// NewArray creates a new Array Data type with the specified maximum
+// NewSlice creates a new Slice Data type with the specified maximum
 // rendering width.
-func NewArray(maxWidth int) *Array {
-	return &Array{
+func NewSlice(maxWidth int) *Slice {
+	return &Slice{
 		maxWidth: maxWidth,
 	}
 }
 
-// Array implements the Data interface for an array of Data elements.
-type Array struct {
+// Slice implements the Data interface for an array of Data elements.
+type Slice struct {
 	maxWidth int
 	height   int
 	content  []Data
 	lines    []string
 }
 
-func (arr *Array) addLine(line string) {
+func (arr *Slice) addLine(line string) {
 	arr.lines = append(arr.lines, line)
 }
 
-func (arr *Array) layout() {
+func (arr *Slice) layout() {
 	if len(arr.lines) > 0 {
 		return
 	}
@@ -174,12 +174,12 @@ func (arr *Array) layout() {
 }
 
 // Append adds data to the array.
-func (arr *Array) Append(data Data) {
+func (arr *Slice) Append(data Data) {
 	arr.content = append(arr.content, data)
 }
 
 // Width implements the Data.Width().
-func (arr *Array) Width(m Measure) int {
+func (arr *Slice) Width(m Measure) int {
 	arr.layout()
 
 	var max int
@@ -193,20 +193,20 @@ func (arr *Array) Width(m Measure) int {
 }
 
 // Height implements the Data.Height().
-func (arr *Array) Height() int {
+func (arr *Slice) Height() int {
 	arr.layout()
 	return len(arr.lines)
 }
 
 // Content implements the Data.Content().
-func (arr *Array) Content(row int) string {
+func (arr *Slice) Content(row int) string {
 	if row < len(arr.lines) {
 		return arr.lines[row]
 	}
 	return ""
 }
 
-func (arr *Array) String() string {
+func (arr *Slice) String() string {
 	result := "["
 	for idx, c := range arr.content {
 		if idx > 0 {

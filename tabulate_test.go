@@ -12,14 +12,23 @@ import (
 	"testing"
 )
 
+var borderTestBasic = `Year,Income,Expenses
+2018,100,90;91;92
+2019,110,85
+2020,107,50`
+
+var borderTestHdrOnly = `Year,Income,Expenses`
+
 var borderTests = []struct {
 	style  Style
 	align  Align
+	input  string
 	result string
 }{
 	{
 		style: Plain,
 		align: TL,
+		input: borderTestBasic,
 		result: `
 Year  Income  Expenses
 2018  100     90
@@ -32,6 +41,7 @@ Year  Income  Expenses
 	{
 		style: Plain,
 		align: MC,
+		input: borderTestBasic,
 		result: `
 Year  Income  Expenses
                  90
@@ -44,6 +54,7 @@ Year  Income  Expenses
 	{
 		style: Plain,
 		align: BR,
+		input: borderTestBasic,
 		result: `
 Year  Income  Expenses
                     90
@@ -56,6 +67,7 @@ Year  Income  Expenses
 	{
 		style: ASCII,
 		align: TL,
+		input: borderTestBasic,
 		result: `
 +------+--------+----------+
 | Year | Income | Expenses |
@@ -71,6 +83,7 @@ Year  Income  Expenses
 	{
 		style: ASCII,
 		align: MC,
+		input: borderTestBasic,
 		result: `
 +------+--------+----------+
 | Year | Income | Expenses |
@@ -86,6 +99,7 @@ Year  Income  Expenses
 	{
 		style: ASCII,
 		align: BR,
+		input: borderTestBasic,
 		result: `
 +------+--------+----------+
 | Year | Income | Expenses |
@@ -101,6 +115,7 @@ Year  Income  Expenses
 	{
 		style: Unicode,
 		align: TL,
+		input: borderTestBasic,
 		result: `
 ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
 ┃ Year ┃ Income ┃ Expenses ┃
@@ -116,6 +131,7 @@ Year  Income  Expenses
 	{
 		style: Unicode,
 		align: MC,
+		input: borderTestBasic,
 		result: `
 ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
 ┃ Year ┃ Income ┃ Expenses ┃
@@ -131,6 +147,7 @@ Year  Income  Expenses
 	{
 		style: Unicode,
 		align: BR,
+		input: borderTestBasic,
 		result: `
 ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
 ┃ Year ┃ Income ┃ Expenses ┃
@@ -146,6 +163,7 @@ Year  Income  Expenses
 	{
 		style: UnicodeLight,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         ┌──────┬────────┬──────────┐
         │ Year │ Income │ Expenses │
@@ -161,6 +179,7 @@ Year  Income  Expenses
 	{
 		style: UnicodeLight,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         ┌──────┬────────┬──────────┐
         │ Year │ Income │ Expenses │
@@ -176,6 +195,7 @@ Year  Income  Expenses
 	{
 		style: UnicodeLight,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         ┌──────┬────────┬──────────┐
         │ Year │ Income │ Expenses │
@@ -191,6 +211,7 @@ Year  Income  Expenses
 	{
 		style: UnicodeBold,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
         ┃ Year ┃ Income ┃ Expenses ┃
@@ -206,6 +227,7 @@ Year  Income  Expenses
 	{
 		style: UnicodeBold,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
         ┃ Year ┃ Income ┃ Expenses ┃
@@ -221,6 +243,7 @@ Year  Income  Expenses
 	{
 		style: UnicodeBold,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
         ┃ Year ┃ Income ┃ Expenses ┃
@@ -236,6 +259,7 @@ Year  Income  Expenses
 	{
 		style: Colon,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         Year : Income : Expenses
         2018 : 100    : 90
@@ -248,6 +272,7 @@ Year  Income  Expenses
 	{
 		style: Colon,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         Year : Income : Expenses
              :        :    90
@@ -260,6 +285,7 @@ Year  Income  Expenses
 	{
 		style: Colon,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         Year : Income : Expenses
              :        :       90
@@ -272,6 +298,7 @@ Year  Income  Expenses
 	{
 		style: Simple,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ---- ------ --------
@@ -285,6 +312,7 @@ Year  Income  Expenses
 	{
 		style: Simple,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ---- ------ --------
@@ -298,6 +326,7 @@ Year  Income  Expenses
 	{
 		style: Simple,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ---- ------ --------
@@ -311,6 +340,7 @@ Year  Income  Expenses
 	{
 		style: SimpleUnicode,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ──── ────── ────────
@@ -324,6 +354,7 @@ Year  Income  Expenses
 	{
 		style: SimpleUnicode,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ──── ────── ────────
@@ -337,6 +368,7 @@ Year  Income  Expenses
 	{
 		style: SimpleUnicode,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ──── ────── ────────
@@ -350,6 +382,7 @@ Year  Income  Expenses
 	{
 		style: SimpleUnicodeBold,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ━━━━ ━━━━━━ ━━━━━━━━
@@ -363,6 +396,7 @@ Year  Income  Expenses
 	{
 		style: SimpleUnicodeBold,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ━━━━ ━━━━━━ ━━━━━━━━
@@ -376,6 +410,7 @@ Year  Income  Expenses
 	{
 		style: SimpleUnicodeBold,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         Year Income Expenses
         ━━━━ ━━━━━━ ━━━━━━━━
@@ -389,6 +424,7 @@ Year  Income  Expenses
 	{
 		style: Github,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         | Year | Income | Expenses |
         |------|--------|----------|
@@ -402,6 +438,7 @@ Year  Income  Expenses
 	{
 		style: Github,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         | Year | Income | Expenses |
         |------|--------|----------|
@@ -415,6 +452,7 @@ Year  Income  Expenses
 	{
 		style: Github,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         | Year | Income | Expenses |
         |------|--------|----------|
@@ -428,6 +466,7 @@ Year  Income  Expenses
 	{
 		style: CSV,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         Year,Income,Expenses
         2018,100,90
@@ -440,6 +479,7 @@ Year  Income  Expenses
 	{
 		style: CSV,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         Year,Income,Expenses
         ,,90
@@ -452,6 +492,7 @@ Year  Income  Expenses
 	{
 		style: CSV,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         Year,Income,Expenses
         ,,90
@@ -464,6 +505,7 @@ Year  Income  Expenses
 	{
 		style: JSON,
 		align: TL,
+		input: borderTestBasic,
 		result: `
         {"2018":["100","90\n91\n92"],"2019":["110","85"],"2020":["107","50"]}
 `,
@@ -471,6 +513,7 @@ Year  Income  Expenses
 	{
 		style: JSON,
 		align: MC,
+		input: borderTestBasic,
 		result: `
         {"2018":["100","90\n91\n92"],"2019":["110","85"],"2020":["107","50"]}
 `,
@@ -478,8 +521,107 @@ Year  Income  Expenses
 	{
 		style: JSON,
 		align: BR,
+		input: borderTestBasic,
 		result: `
         {"2018":["100","90\n91\n92"],"2019":["110","85"],"2020":["107","50"]}
+`,
+	},
+
+	// Header only tests.
+	{
+		style: Plain,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+Year  Income  Expenses
+`,
+	},
+	{
+		style: ASCII,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        +------+--------+----------+
+        | Year | Income | Expenses |
+        +------+--------+----------+
+`,
+	},
+	{
+		style: Unicode,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+        ┃ Year ┃ Income ┃ Expenses ┃
+        ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        ┌──────┬────────┬──────────┐
+        │ Year │ Income │ Expenses │
+        └──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+        ┃ Year ┃ Income ┃ Expenses ┃
+        ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+`,
+	},
+	{
+		style: Colon,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        Year : Income : Expenses
+`,
+	},
+	{
+		style: Simple,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        Year Income Expenses
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        Year Income Expenses
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        Year Income Expenses
+`,
+	},
+	{
+		style: Github,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        | Year | Income | Expenses |
+`,
+	},
+	{
+		style: JSON,
+		align: TL,
+		input: borderTestHdrOnly,
+		result: `
+        {}
 `,
 	},
 }
@@ -531,13 +673,8 @@ func match(a, b string) bool {
 }
 
 func TestStyles(t *testing.T) {
-	data := `Year,Income,Expenses
-2018,100,90;91;92
-2019,110,85
-2020,107,50`
-
 	for idx, test := range borderTests {
-		result := tab(test.style, test.align, data)
+		result := tab(test.style, test.align, test.input)
 		if !match(result, test.result) {
 			t.Errorf("TestStyles %d: got:\n%s\nexpected:\n%s\n", idx,
 				result, test.result)
@@ -581,11 +718,6 @@ func align(align Align, data string) {
 	tabulate(New(SimpleUnicodeBold), align, data).Print(os.Stdout)
 	tabulate(New(Github), align, data).Print(os.Stdout)
 	tabulate(New(JSON), align, data).Print(os.Stdout)
-}
-
-func TestEmpty(t *testing.T) {
-	data := `Year,Income,Expenses`
-	align(TL, data)
 }
 
 func TestRowsOnly(t *testing.T) {

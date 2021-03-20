@@ -12,6 +12,539 @@ import (
 	"testing"
 )
 
+var borderTests = []struct {
+	style  Style
+	align  Align
+	result string
+}{
+	{
+		style: Plain,
+		align: TL,
+		result: `
+Year  Income  Expenses
+2018  100     90
+              91
+              92
+2019  110     85
+2020  107     50
+`,
+	},
+	{
+		style: Plain,
+		align: MC,
+		result: `
+Year  Income  Expenses
+                 90
+2018   100       91
+                 92
+2019   110       85
+2020   107       50
+`,
+	},
+	{
+		style: Plain,
+		align: BR,
+		result: `
+Year  Income  Expenses
+                    90
+                    91
+2018     100        92
+2019     110        85
+2020     107        50
+`,
+	},
+	{
+		style: ASCII,
+		align: TL,
+		result: `
++------+--------+----------+
+| Year | Income | Expenses |
++------+--------+----------+
+| 2018 | 100    | 90       |
+|      |        | 91       |
+|      |        | 92       |
+| 2019 | 110    | 85       |
+| 2020 | 107    | 50       |
++------+--------+----------+
+`,
+	},
+	{
+		style: ASCII,
+		align: MC,
+		result: `
++------+--------+----------+
+| Year | Income | Expenses |
++------+--------+----------+
+|      |        |    90    |
+| 2018 |  100   |    91    |
+|      |        |    92    |
+| 2019 |  110   |    85    |
+| 2020 |  107   |    50    |
++------+--------+----------+
+`,
+	},
+	{
+		style: ASCII,
+		align: BR,
+		result: `
++------+--------+----------+
+| Year | Income | Expenses |
++------+--------+----------+
+|      |        |       90 |
+|      |        |       91 |
+| 2018 |    100 |       92 |
+| 2019 |    110 |       85 |
+| 2020 |    107 |       50 |
++------+--------+----------+
+`,
+	},
+	{
+		style: Unicode,
+		align: TL,
+		result: `
+┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+┃ Year ┃ Income ┃ Expenses ┃
+┡━━━━━━╇━━━━━━━━╇━━━━━━━━━━┩
+│ 2018 │ 100    │ 90       │
+│      │        │ 91       │
+│      │        │ 92       │
+│ 2019 │ 110    │ 85       │
+│ 2020 │ 107    │ 50       │
+└──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: Unicode,
+		align: MC,
+		result: `
+┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+┃ Year ┃ Income ┃ Expenses ┃
+┡━━━━━━╇━━━━━━━━╇━━━━━━━━━━┩
+│      │        │    90    │
+│ 2018 │  100   │    91    │
+│      │        │    92    │
+│ 2019 │  110   │    85    │
+│ 2020 │  107   │    50    │
+└──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: Unicode,
+		align: BR,
+		result: `
+┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+┃ Year ┃ Income ┃ Expenses ┃
+┡━━━━━━╇━━━━━━━━╇━━━━━━━━━━┩
+│      │        │       90 │
+│      │        │       91 │
+│ 2018 │    100 │       92 │
+│ 2019 │    110 │       85 │
+│ 2020 │    107 │       50 │
+└──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: TL,
+		result: `
+        ┌──────┬────────┬──────────┐
+        │ Year │ Income │ Expenses │
+        ├──────┼────────┼──────────┤
+        │ 2018 │ 100    │ 90       │
+        │      │        │ 91       │
+        │      │        │ 92       │
+        │ 2019 │ 110    │ 85       │
+        │ 2020 │ 107    │ 50       │
+        └──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: MC,
+		result: `
+        ┌──────┬────────┬──────────┐
+        │ Year │ Income │ Expenses │
+        ├──────┼────────┼──────────┤
+        │      │        │    90    │
+        │ 2018 │  100   │    91    │
+        │      │        │    92    │
+        │ 2019 │  110   │    85    │
+        │ 2020 │  107   │    50    │
+        └──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: BR,
+		result: `
+        ┌──────┬────────┬──────────┐
+        │ Year │ Income │ Expenses │
+        ├──────┼────────┼──────────┤
+        │      │        │       90 │
+        │      │        │       91 │
+        │ 2018 │    100 │       92 │
+        │ 2019 │    110 │       85 │
+        │ 2020 │    107 │       50 │
+        └──────┴────────┴──────────┘
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: TL,
+		result: `
+        ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+        ┃ Year ┃ Income ┃ Expenses ┃
+        ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━┫
+        ┃ 2018 ┃ 100    ┃ 90       ┃
+        ┃      ┃        ┃ 91       ┃
+        ┃      ┃        ┃ 92       ┃
+        ┃ 2019 ┃ 110    ┃ 85       ┃
+        ┃ 2020 ┃ 107    ┃ 50       ┃
+        ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: MC,
+		result: `
+        ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+        ┃ Year ┃ Income ┃ Expenses ┃
+        ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━┫
+        ┃      ┃        ┃    90    ┃
+        ┃ 2018 ┃  100   ┃    91    ┃
+        ┃      ┃        ┃    92    ┃
+        ┃ 2019 ┃  110   ┃    85    ┃
+        ┃ 2020 ┃  107   ┃    50    ┃
+        ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: BR,
+		result: `
+        ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓
+        ┃ Year ┃ Income ┃ Expenses ┃
+        ┣━━━━━━╋━━━━━━━━╋━━━━━━━━━━┫
+        ┃      ┃        ┃       90 ┃
+        ┃      ┃        ┃       91 ┃
+        ┃ 2018 ┃    100 ┃       92 ┃
+        ┃ 2019 ┃    110 ┃       85 ┃
+        ┃ 2020 ┃    107 ┃       50 ┃
+        ┗━━━━━━┻━━━━━━━━┻━━━━━━━━━━┛
+`,
+	},
+	{
+		style: Colon,
+		align: TL,
+		result: `
+        Year : Income : Expenses
+        2018 : 100    : 90
+             :        : 91
+             :        : 92
+        2019 : 110    : 85
+        2020 : 107    : 50
+`,
+	},
+	{
+		style: Colon,
+		align: MC,
+		result: `
+        Year : Income : Expenses
+             :        :    90
+        2018 :  100   :    91
+             :        :    92
+        2019 :  110   :    85
+        2020 :  107   :    50
+`,
+	},
+	{
+		style: Colon,
+		align: BR,
+		result: `
+        Year : Income : Expenses
+             :        :       90
+             :        :       91
+        2018 :    100 :       92
+        2019 :    110 :       85
+        2020 :    107 :       50
+`,
+	},
+	{
+		style: Simple,
+		align: TL,
+		result: `
+        Year Income Expenses
+        ---- ------ --------
+        2018 100    90
+                    91
+                    92
+        2019 110    85
+        2020 107    50
+`,
+	},
+	{
+		style: Simple,
+		align: MC,
+		result: `
+        Year Income Expenses
+        ---- ------ --------
+                       90
+        2018  100      91
+                       92
+        2019  110      85
+        2020  107      50
+`,
+	},
+	{
+		style: Simple,
+		align: BR,
+		result: `
+        Year Income Expenses
+        ---- ------ --------
+                          90
+                          91
+        2018    100       92
+        2019    110       85
+        2020    107       50
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: TL,
+		result: `
+        Year Income Expenses
+        ──── ────── ────────
+        2018 100    90
+                    91
+                    92
+        2019 110    85
+        2020 107    50
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: MC,
+		result: `
+        Year Income Expenses
+        ──── ────── ────────
+                       90
+        2018  100      91
+                       92
+        2019  110      85
+        2020  107      50
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: BR,
+		result: `
+        Year Income Expenses
+        ──── ────── ────────
+                          90
+                          91
+        2018    100       92
+        2019    110       85
+        2020    107       50
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: TL,
+		result: `
+        Year Income Expenses
+        ━━━━ ━━━━━━ ━━━━━━━━
+        2018 100    90
+                    91
+                    92
+        2019 110    85
+        2020 107    50
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: MC,
+		result: `
+        Year Income Expenses
+        ━━━━ ━━━━━━ ━━━━━━━━
+                       90
+        2018  100      91
+                       92
+        2019  110      85
+        2020  107      50
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: BR,
+		result: `
+        Year Income Expenses
+        ━━━━ ━━━━━━ ━━━━━━━━
+                          90
+                          91
+        2018    100       92
+        2019    110       85
+        2020    107       50
+`,
+	},
+	{
+		style: Github,
+		align: TL,
+		result: `
+        | Year | Income | Expenses |
+        |------|--------|----------|
+        | 2018 | 100    | 90       |
+        |      |        | 91       |
+        |      |        | 92       |
+        | 2019 | 110    | 85       |
+        | 2020 | 107    | 50       |
+`,
+	},
+	{
+		style: Github,
+		align: MC,
+		result: `
+        | Year | Income | Expenses |
+        |------|--------|----------|
+        |      |        |    90    |
+        | 2018 |  100   |    91    |
+        |      |        |    92    |
+        | 2019 |  110   |    85    |
+        | 2020 |  107   |    50    |
+`,
+	},
+	{
+		style: Github,
+		align: BR,
+		result: `
+        | Year | Income | Expenses |
+        |------|--------|----------|
+        |      |        |       90 |
+        |      |        |       91 |
+        | 2018 |    100 |       92 |
+        | 2019 |    110 |       85 |
+        | 2020 |    107 |       50 |
+`,
+	},
+	{
+		style: CSV,
+		align: TL,
+		result: `
+        Year,Income,Expenses
+        2018,100,90
+        ,,91
+        ,,92
+        2019,110,85
+        2020,107,50
+`,
+	},
+	{
+		style: CSV,
+		align: MC,
+		result: `
+        Year,Income,Expenses
+        ,,90
+        2018,100,91
+        ,,92
+        2019,110,85
+        2020,107,50
+`,
+	},
+	{
+		style: CSV,
+		align: BR,
+		result: `
+        Year,Income,Expenses
+        ,,90
+        ,,91
+        2018,100,92
+        2019,110,85
+        2020,107,50
+`,
+	},
+	{
+		style: JSON,
+		align: TL,
+		result: `
+        {"2018":["100","90\n91\n92"],"2019":["110","85"],"2020":["107","50"]}
+`,
+	},
+	{
+		style: JSON,
+		align: MC,
+		result: `
+        {"2018":["100","90\n91\n92"],"2019":["110","85"],"2020":["107","50"]}
+`,
+	},
+	{
+		style: JSON,
+		align: BR,
+		result: `
+        {"2018":["100","90\n91\n92"],"2019":["110","85"],"2020":["107","50"]}
+`,
+	},
+}
+
+func tab(style Style, align Align, data string) string {
+	tab := New(style)
+
+	rows := strings.Split(data, "\n")
+	for _, hdr := range strings.Split(rows[0], ",") {
+		tab.Header(hdr).SetAlign(align)
+	}
+
+	for _, r := range rows[1:] {
+		row := tab.Row()
+		for _, col := range strings.Split(r, ",") {
+			row.ColumnData(NewLinesData(strings.Split(col, ";")))
+		}
+	}
+	var sb strings.Builder
+	tab.Print(&sb)
+	return sb.String()
+}
+
+func cleanup(input string) []string {
+	var result []string
+
+	for _, line := range strings.Split(input, "\n") {
+		line = strings.TrimSpace(line)
+		if len(line) > 0 {
+			result = append(result, line)
+		}
+	}
+	return result
+}
+
+func match(a, b string) bool {
+	aLines := cleanup(a)
+	bLines := cleanup(b)
+
+	if len(aLines) != len(bLines) {
+		return false
+	}
+	for idx, al := range aLines {
+		if al != bLines[idx] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestStyles(t *testing.T) {
+	data := `Year,Income,Expenses
+2018,100,90;91;92
+2019,110,85
+2020,107,50`
+
+	for idx, test := range borderTests {
+		result := tab(test.style, test.align, data)
+		if !match(result, test.result) {
+			t.Errorf("TestStyles %d: got:\n%s\nexpected:\n%s\n", idx,
+				result, test.result)
+		}
+	}
+}
+
 func tabulateRows(tab *Tabulate, align Align, rows []string) *Tabulate {
 
 	if len(rows[0]) > 0 {
@@ -48,17 +581,6 @@ func align(align Align, data string) {
 	tabulate(New(SimpleUnicodeBold), align, data).Print(os.Stdout)
 	tabulate(New(Github), align, data).Print(os.Stdout)
 	tabulate(New(JSON), align, data).Print(os.Stdout)
-}
-
-func TestBorders(t *testing.T) {
-	data := `Year,Income,Expenses
-2018,100,90
-2019,110,85
-2020,107,50`
-
-	align(TL, data)
-	align(MC, data)
-	align(BR, data)
 }
 
 func TestEmpty(t *testing.T) {

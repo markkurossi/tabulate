@@ -7,7 +7,6 @@
 package tabulate
 
 import (
-	"os"
 	"strings"
 	"testing"
 )
@@ -19,10 +18,16 @@ var borderTestBasic = `Year,Income,Expenses
 
 var borderTestHdrOnly = `Year,Income,Expenses`
 
+var borderTestBodyOnly = `
+2018,100,9000
+2019,110,85;86;86
+2020,107,50`
+
 var borderTests = []struct {
 	style  Style
 	align  Align
 	input  string
+	rowSep string
 	result string
 }{
 	{
@@ -624,14 +629,515 @@ Year  Income  Expenses
         {}
 `,
 	},
+
+	// Body only.
+	{
+		style: Plain,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+         2018  100  9000
+         2019  110  85
+                    86
+                    86
+         2020  107  50
+`,
+	},
+	{
+		style: Plain,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+         2018  100  9000
+                     85
+         2019  110   86
+                     86
+         2020  107   50
+`,
+	},
+	{
+		style: Plain,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+         2018  100  9000
+                      85
+                      86
+         2019  110    86
+         2020  107    50
+`,
+	},
+	{
+		style: ASCII,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        +------+-----+------+
+        | 2018 | 100 | 9000 |
+        | 2019 | 110 | 85   |
+        |      |     | 86   |
+        |      |     | 86   |
+        | 2020 | 107 | 50   |
+        +------+-----+------+
+`,
+	},
+	{
+		style: ASCII,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        +------+-----+------+
+        | 2018 | 100 | 9000 |
+        |      |     |  85  |
+        | 2019 | 110 |  86  |
+        |      |     |  86  |
+        | 2020 | 107 |  50  |
+        +------+-----+------+
+`,
+	},
+	{
+		style: ASCII,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        +------+-----+------+
+        | 2018 | 100 | 9000 |
+        |      |     |   85 |
+        |      |     |   86 |
+        | 2019 | 110 |   86 |
+        | 2020 | 107 |   50 |
+        +------+-----+------+
+`,
+	},
+	{
+		style: Unicode,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        ┌──────┬─────┬──────┐
+        │ 2018 │ 100 │ 9000 │
+        │ 2019 │ 110 │ 85   │
+        │      │     │ 86   │
+        │      │     │ 86   │
+        │ 2020 │ 107 │ 50   │
+        └──────┴─────┴──────┘
+`,
+	},
+	{
+		style: Unicode,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        ┌──────┬─────┬──────┐
+        │ 2018 │ 100 │ 9000 │
+        │      │     │  85  │
+        │ 2019 │ 110 │  86  │
+        │      │     │  86  │
+        │ 2020 │ 107 │  50  │
+        └──────┴─────┴──────┘
+`,
+	},
+	{
+		style: Unicode,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        ┌──────┬─────┬──────┐
+        │ 2018 │ 100 │ 9000 │
+        │      │     │   85 │
+        │      │     │   86 │
+        │ 2019 │ 110 │   86 │
+        │ 2020 │ 107 │   50 │
+        └──────┴─────┴──────┘
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        ┌──────┬─────┬──────┐
+        │ 2018 │ 100 │ 9000 │
+        │ 2019 │ 110 │ 85   │
+        │      │     │ 86   │
+        │      │     │ 86   │
+        │ 2020 │ 107 │ 50   │
+        └──────┴─────┴──────┘
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        ┌──────┬─────┬──────┐
+        │ 2018 │ 100 │ 9000 │
+        │      │     │  85  │
+        │ 2019 │ 110 │  86  │
+        │      │     │  86  │
+        │ 2020 │ 107 │  50  │
+        └──────┴─────┴──────┘
+`,
+	},
+	{
+		style: UnicodeLight,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        ┌──────┬─────┬──────┐
+        │ 2018 │ 100 │ 9000 │
+        │      │     │   85 │
+        │      │     │   86 │
+        │ 2019 │ 110 │   86 │
+        │ 2020 │ 107 │   50 │
+        └──────┴─────┴──────┘
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        ┏━━━━━━┳━━━━━┳━━━━━━┓
+        ┃ 2018 ┃ 100 ┃ 9000 ┃
+        ┃ 2019 ┃ 110 ┃ 85   ┃
+        ┃      ┃     ┃ 86   ┃
+        ┃      ┃     ┃ 86   ┃
+        ┃ 2020 ┃ 107 ┃ 50   ┃
+        ┗━━━━━━┻━━━━━┻━━━━━━┛
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        ┏━━━━━━┳━━━━━┳━━━━━━┓
+        ┃ 2018 ┃ 100 ┃ 9000 ┃
+        ┃      ┃     ┃  85  ┃
+        ┃ 2019 ┃ 110 ┃  86  ┃
+        ┃      ┃     ┃  86  ┃
+        ┃ 2020 ┃ 107 ┃  50  ┃
+        ┗━━━━━━┻━━━━━┻━━━━━━┛
+`,
+	},
+	{
+		style: UnicodeBold,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        ┏━━━━━━┳━━━━━┳━━━━━━┓
+        ┃ 2018 ┃ 100 ┃ 9000 ┃
+        ┃      ┃     ┃   85 ┃
+        ┃      ┃     ┃   86 ┃
+        ┃ 2019 ┃ 110 ┃   86 ┃
+        ┃ 2020 ┃ 107 ┃   50 ┃
+        ┗━━━━━━┻━━━━━┻━━━━━━┛
+`,
+	},
+	{
+		style: Colon,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        2018 : 100 : 9000
+        2019 : 110 : 85
+             :     : 86
+             :     : 86
+        2020 : 107 : 50
+`,
+	},
+	{
+		style: Colon,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        2018 : 100 : 9000
+             :     :  85
+        2019 : 110 :  86
+             :     :  86
+        2020 : 107 :  50
+`,
+	},
+	{
+		style: Colon,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        2018 : 100 : 9000
+             :     :   85
+             :     :   86
+        2019 : 110 :   86
+        2020 : 107 :   50
+`,
+	},
+	{
+		style: Simple,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+        2019 110 85
+                 86
+                 86
+        2020 107 50
+`,
+	},
+	{
+		style: Simple,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+                  85
+        2019 110  86
+                  86
+        2020 107  50
+`,
+	},
+	{
+		style: Simple,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+                   85
+                   86
+        2019 110   86
+        2020 107   50
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+        2019 110 85
+                 86
+                 86
+        2020 107 50
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+                  85
+        2019 110  86
+                  86
+        2020 107  50
+`,
+	},
+	{
+		style: SimpleUnicode,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+                   85
+                   86
+        2019 110   86
+        2020 107   50
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+        2019 110 85
+                 86
+                 86
+        2020 107 50
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+                  85
+        2019 110  86
+                  86
+        2020 107  50
+`,
+	},
+	{
+		style: SimpleUnicodeBold,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        2018 100 9000
+                   85
+                   86
+        2019 110   86
+        2020 107   50
+`,
+	},
+	{
+		style: Github,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        | 2018 | 100 | 9000 |
+        | 2019 | 110 | 85   |
+        |      |     | 86   |
+        |      |     | 86   |
+        | 2020 | 107 | 50   |
+`,
+	},
+	{
+		style: Github,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        | 2018 | 100 | 9000 |
+        |      |     |  85  |
+        | 2019 | 110 |  86  |
+        |      |     |  86  |
+        | 2020 | 107 |  50  |
+`,
+	},
+	{
+		style: Github,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        | 2018 | 100 | 9000 |
+        |      |     |   85 |
+        |      |     |   86 |
+        | 2019 | 110 |   86 |
+        | 2020 | 107 |   50 |
+`,
+	},
+	{
+		style: CSV,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        2018,100,9000
+        2019,110,85
+        ,,86
+        ,,86
+        2020,107,50
+`,
+	},
+	{
+		style: CSV,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        2018,100,9000
+        ,,85
+        2019,110,86
+        ,,86
+        2020,107,50
+`,
+	},
+	{
+		style: CSV,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        2018,100,9000
+        ,,85
+        ,,86
+        2019,110,86
+        2020,107,50
+`,
+	},
+	{
+		style: JSON,
+		align: TL,
+		input: borderTestBodyOnly,
+		result: `
+        {"2018":["100","9000"],"2019":["110","85\n86\n86"],"2020":["107","50"]}
+`,
+	},
+	{
+		style: JSON,
+		align: MC,
+		input: borderTestBodyOnly,
+		result: `
+        {"2018":["100","9000"],"2019":["110","85\n86\n86"],"2020":["107","50"]}
+`,
+	},
+	{
+		style: JSON,
+		align: BR,
+		input: borderTestBodyOnly,
+		result: `
+        {"2018":["100","9000"],"2019":["110","85\n86\n86"],"2020":["107","50"]}
+`,
+	},
+
+	// Empty
+	{
+		style:  Plain,
+		align:  TL,
+		input:  ``,
+		result: ``,
+	},
+
+	// CSV escape
+	{
+		style: CSV,
+		align: TL,
+		input: `Year,Income,Source|2018,100,Salary|2019,110,"Consultation"|2020,120,Lottery
+et al`,
+		rowSep: "|",
+		result: `
+        Year,Income,Source
+        2018,100,Salary
+        2019,110,"""Consultation"""
+        2020,120,"Lottery
+        et al"
+`,
+	},
+
+	// Missing columns
+	{
+		style: Unicode,
+		align: TL,
+		input: `Year,Value
+2018,100
+2019,
+2020,100,200`,
+		result: `
+        ┏━━━━━━┳━━━━━━━┳━━━━━┓
+        ┃ Year ┃ Value ┃     ┃
+        ┡━━━━━━╇━━━━━━━╇━━━━━┩
+        │ 2018 │ 100   │     │
+        │ 2019 │       │     │
+        │ 2020 │ 100   │ 200 │
+        └──────┴───────┴─────┘
+`,
+	},
 }
 
-func tab(style Style, align Align, data string) string {
+func tab(style Style, align Align, data, rowSep string) string {
 	tab := New(style)
 
-	rows := strings.Split(data, "\n")
-	for _, hdr := range strings.Split(rows[0], ",") {
-		tab.Header(hdr).SetAlign(align)
+	rows := strings.Split(data, rowSep)
+	if len(rows[0]) > 0 {
+		for _, hdr := range strings.Split(rows[0], ",") {
+			tab.Header(hdr).SetAlign(align)
+		}
+	} else {
+		var width int
+		for _, row := range rows[1:] {
+			if len(row) > width {
+				width = len(row)
+			}
+		}
+		for i := 0; i < width; i++ {
+			tab.SetDefaults(i, align)
+		}
 	}
 
 	for _, r := range rows[1:] {
@@ -674,7 +1180,11 @@ func match(a, b string) bool {
 
 func TestStyles(t *testing.T) {
 	for idx, test := range borderTests {
-		result := tab(test.style, test.align, test.input)
+		rowSep := test.rowSep
+		if len(rowSep) == 0 {
+			rowSep = "\n"
+		}
+		result := tab(test.style, test.align, test.input, rowSep)
 		if !match(result, test.result) {
 			t.Errorf("TestStyles %d: got:\n%s\nexpected:\n%s\n", idx,
 				result, test.result)
@@ -706,51 +1216,6 @@ func tabulate(tab *Tabulate, align Align, data string) *Tabulate {
 	return tabulateRows(tab, align, strings.Split(data, "\n"))
 }
 
-func align(align Align, data string) {
-	tabulate(New(Plain), align, data).Print(os.Stdout)
-	tabulate(New(ASCII), align, data).Print(os.Stdout)
-	tabulate(New(Unicode), align, data).Print(os.Stdout)
-	tabulate(New(UnicodeLight), align, data).Print(os.Stdout)
-	tabulate(New(UnicodeBold), align, data).Print(os.Stdout)
-	tabulate(New(Colon), align, data).Print(os.Stdout)
-	tabulate(New(Simple), align, data).Print(os.Stdout)
-	tabulate(New(SimpleUnicode), align, data).Print(os.Stdout)
-	tabulate(New(SimpleUnicodeBold), align, data).Print(os.Stdout)
-	tabulate(New(Github), align, data).Print(os.Stdout)
-	tabulate(New(JSON), align, data).Print(os.Stdout)
-}
-
-func TestRowsOnly(t *testing.T) {
-	data := `
-2018,100,90
-2019,110,85
-2020,107,50`
-
-	align(TL, data)
-}
-
-func TestNoColumns(t *testing.T) {
-	align(TL, "")
-}
-
-var csv = `Year,Income,Source|2018,100,Salary|2019,110,"Consultation"|2020,120,Lottery
-et al`
-
-func TestCSV(t *testing.T) {
-	rows := strings.Split(csv, "|")
-	tabulateRows(New(CSV), None, rows).Print(os.Stdout)
-}
-
-var missingCols = `Year,Value
-2018,100
-2019,
-2020,100,200`
-
-func TestMissingColumns(t *testing.T) {
-	rows := strings.Split(missingCols, "\n")
-	tabulateRows(New(Unicode), TL, rows).Print(os.Stdout)
-}
-
 func TestNested(t *testing.T) {
 	tab := New(Unicode)
 
@@ -771,7 +1236,26 @@ func TestNested(t *testing.T) {
 
 	row.ColumnData(tabulate(New(Unicode), TR, data))
 
-	tab.Print(os.Stdout)
+	var sb strings.Builder
+	tab.Print(&sb)
+	expected := `
+        ┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+        ┃     Key ┃            Value             ┃
+        ┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+        │    Name │          ACME Corp.          │
+        │         │ ┏━━━━━━┳━━━━━━━━┳━━━━━━━━━━┓ │
+        │         │ ┃ Year ┃ Income ┃ Expenses ┃ │
+        │         │ ┡━━━━━━╇━━━━━━━━╇━━━━━━━━━━┩ │
+        │ Numbers │ │ 2018 │    100 │       90 │ │
+        │         │ │ 2019 │    110 │       85 │ │
+        │         │ │ 2020 │    107 │       50 │ │
+        │         │ └──────┴────────┴──────────┘ │
+        └─────────┴──────────────────────────────┘
+`
+
+	if !match(sb.String(), expected) {
+		t.Errorf("TestNested: got\n%s\nexpected:\n%s\n", sb.String(), expected)
+	}
 }
 
 func TestWide(t *testing.T) {
@@ -786,5 +1270,17 @@ func TestWide(t *testing.T) {
 	row.Column("a")
 	row.Column("a")
 
-	tab.Print(os.Stdout)
+	var sb strings.Builder
+	tab.Print(&sb)
+	expected := `
+        +----+----+------+
+        | 我 | 是 | 测试 |
+        +----+----+------+
+        | a  | a  | a    |
+        +----+----+------+
+`
+
+	if !match(sb.String(), expected) {
+		t.Errorf("TestWide: got\n%s\nexpected:\n%s\n", sb.String(), expected)
+	}
 }

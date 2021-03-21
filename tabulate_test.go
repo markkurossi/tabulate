@@ -7,6 +7,7 @@
 package tabulate
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -1163,7 +1164,7 @@ func cleanup(input string) []string {
 	return result
 }
 
-func match(a, b string) bool {
+func m(a, b string) bool {
 	aLines := cleanup(a)
 	bLines := cleanup(b)
 
@@ -1178,6 +1179,12 @@ func match(a, b string) bool {
 	return true
 }
 
+func match(t *testing.T, a, b, name string) {
+	if !m(a, b) {
+		t.Errorf("%s: got:\n%s\nexpected:\n%s\n", name, a, b)
+	}
+}
+
 func TestStyles(t *testing.T) {
 	for idx, test := range borderTests {
 		rowSep := test.rowSep
@@ -1185,10 +1192,7 @@ func TestStyles(t *testing.T) {
 			rowSep = "\n"
 		}
 		result := tab(test.style, test.align, test.input, rowSep)
-		if !match(result, test.result) {
-			t.Errorf("TestStyles %d: got:\n%s\nexpected:\n%s\n", idx,
-				result, test.result)
-		}
+		match(t, result, test.result, fmt.Sprintf("TestStyles %d", idx))
 	}
 }
 
@@ -1253,9 +1257,7 @@ func TestNested(t *testing.T) {
         └─────────┴──────────────────────────────┘
 `
 
-	if !match(sb.String(), expected) {
-		t.Errorf("TestNested: got\n%s\nexpected:\n%s\n", sb.String(), expected)
-	}
+	match(t, sb.String(), expected, "TestNested")
 }
 
 func TestWide(t *testing.T) {
@@ -1280,7 +1282,5 @@ func TestWide(t *testing.T) {
         +----+----+------+
 `
 
-	if !match(sb.String(), expected) {
-		t.Errorf("TestWide: got\n%s\nexpected:\n%s\n", sb.String(), expected)
-	}
+	match(t, sb.String(), expected, "TestWide")
 }

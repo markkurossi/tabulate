@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Markku Rossi
+// Copyright (c) 2020-2021 Markku Rossi
 //
 // All rights reserved.
 //
@@ -23,7 +23,24 @@ func TestJSONTimeSeries(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JSON marshal time series failed: %s", err)
 	}
-	fmt.Printf("JSON time series:\n%s\n", string(data))
+	expected := `
+        {
+          "2018": [
+            "100",
+            "90"
+          ],
+          "2019": [
+            "110",
+            "85"
+          ],
+          "2020": [
+            "107",
+            "50"
+          ]
+        }
+`
+
+	match(t, string(data), expected, "TestJSONTimeSeries")
 }
 
 func TestJSONReflect(t *testing.T) {
@@ -62,7 +79,40 @@ func TestJSONReflect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JSON marshal reflect failed: %s", err)
 	}
-	fmt.Printf("JSON marshal reflect:\n%s\n", string(data))
+	expected := `
+        {
+          "Address": {
+            "Lines": [
+              "42 Hacker way",
+              "03139 Cambridge",
+              "MA"
+            ]
+          },
+          "Age": 45,
+          "Info": [
+            {
+              "Email": "mtr@iki.fi",
+              "Work": false
+            },
+            {
+              "Email": "markku.rossi@gmail.com",
+              "Work": true
+            }
+          ],
+          "Mapping": {
+            "First": "1st",
+            "Second": "2nd"
+          },
+          "Meta": {
+            "Email": "mtr@iki.fi",
+            "Work": false
+          },
+          "NPS": 9.9,
+          "Name": "Alyssa P. Hacker"
+        }
+`
+
+	match(t, string(data), expected, "TestJSONReflect")
 }
 
 func TestJSONCertReflect(t *testing.T) {
@@ -82,5 +132,7 @@ func TestJSONCertReflect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JSON marshal cert reflect failed: %s", err)
 	}
-	fmt.Printf("JSON marshal cert reflect:\n%s\n", string(data))
+	if false {
+		fmt.Printf("JSON marshal cert reflect:\n%s\n", string(data))
+	}
 }

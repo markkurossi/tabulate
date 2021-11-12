@@ -67,6 +67,9 @@ const (
 	Unicode
 	UnicodeLight
 	UnicodeBold
+	CompactUnicode
+	CompactUnicodeLight
+	CompactUnicodeBold
 	Colon
 	Simple
 	SimpleUnicode
@@ -78,18 +81,30 @@ const (
 
 // Styles list all supported tabulation types.
 var Styles = map[string]Style{
-	"plain":        Plain,
-	"ascii":        ASCII,
-	"uc":           Unicode,
-	"uclight":      UnicodeLight,
-	"ucbold":       UnicodeBold,
-	"colon":        Colon,
-	"simple":       Simple,
-	"simpleuc":     SimpleUnicode,
-	"simpleucbold": SimpleUnicodeBold,
-	"github":       Github,
-	"csv":          CSV,
-	"json":         JSON,
+	"plain":          Plain,
+	"ascii":          ASCII,
+	"uc":             Unicode,
+	"uclight":        UnicodeLight,
+	"ucbold":         UnicodeBold,
+	"compactuc":      CompactUnicode,
+	"compactuclight": CompactUnicodeLight,
+	"compactucbold":  CompactUnicodeBold,
+	"colon":          Colon,
+	"simple":         Simple,
+	"simpleuc":       SimpleUnicode,
+	"simpleucbold":   SimpleUnicodeBold,
+	"github":         Github,
+	"csv":            CSV,
+	"json":           JSON,
+}
+
+func (s Style) String() string {
+	for name, style := range Styles {
+		if s == style {
+			return name
+		}
+	}
+	return fmt.Sprintf("{Style %d}", s)
 }
 
 // StyleNames returns the tabulation style names as a sorted slice.
@@ -146,6 +161,42 @@ var asciiBorder = Border{
 	BR: "+",
 }
 
+var unicodeHeader = Border{
+	HT: "\u2501",
+	HM: "\u2501",
+	HB: "\u2501",
+	VL: "\u2503",
+	VM: "\u2503",
+	VR: "\u2503",
+	TL: "\u250F",
+	TM: "\u2533",
+	TR: "\u2513",
+	ML: "\u2521",
+	MM: "\u2547",
+	MR: "\u2529",
+	BL: "\u2517",
+	BM: "\u253B",
+	BR: "\u251B",
+}
+
+var unicodeBody = Border{
+	HT: "\u2500",
+	HM: "\u2500",
+	HB: "\u2500",
+	VL: "\u2502",
+	VM: "\u2502",
+	VR: "\u2502",
+	TL: "\u250C",
+	TM: "\u252c",
+	TR: "\u2510",
+	ML: "\u251C",
+	MM: "\u253C",
+	MR: "\u2524",
+	BL: "\u2514",
+	BM: "\u2534",
+	BR: "\u2518",
+}
+
 var unicodeLight = Border{
 	HT: "\u2500",
 	HM: "\u2500",
@@ -189,46 +240,26 @@ var borders = map[Style]Borders{
 		Body:   asciiBorder,
 	},
 	Unicode: {
-		Header: Border{
-			HT: "\u2501",
-			HM: "\u2501",
-			HB: "\u2501",
-			VL: "\u2503",
-			VM: "\u2503",
-			VR: "\u2503",
-			TL: "\u250F",
-			TM: "\u2533",
-			TR: "\u2513",
-			ML: "\u2521",
-			MM: "\u2547",
-			MR: "\u2529",
-			BL: "\u2517",
-			BM: "\u253B",
-			BR: "\u251B",
-		},
-		Body: Border{
-			HT: "\u2500",
-			HM: "\u2500",
-			HB: "\u2500",
-			VL: "\u2502",
-			VM: "\u2502",
-			VR: "\u2502",
-			TL: "\u250C",
-			TM: "\u252c",
-			TR: "\u2510",
-			ML: "\u251C",
-			MM: "\u253C",
-			MR: "\u2524",
-			BL: "\u2514",
-			BM: "\u2534",
-			BR: "\u2518",
-		},
+		Header: unicodeHeader,
+		Body:   unicodeBody,
 	},
 	UnicodeLight: {
 		Header: unicodeLight,
 		Body:   unicodeLight,
 	},
 	UnicodeBold: {
+		Header: unicodeBold,
+		Body:   unicodeBold,
+	},
+	CompactUnicode: {
+		Header: unicodeHeader,
+		Body:   unicodeBody,
+	},
+	CompactUnicodeLight: {
+		Header: unicodeLight,
+		Body:   unicodeLight,
+	},
+	CompactUnicodeBold: {
 		Header: unicodeBold,
 		Body:   unicodeBold,
 	},
@@ -355,7 +386,8 @@ func New(style Style) *Tabulate {
 		Measure: MeasureUnicode,
 	}
 	switch style {
-	case Colon, Simple, SimpleUnicode, SimpleUnicodeBold:
+	case Colon, Simple, SimpleUnicode, SimpleUnicodeBold,
+		CompactUnicode, CompactUnicodeLight, CompactUnicodeBold:
 		tab.Padding = 0
 	case CSV:
 		tab.Padding = 0

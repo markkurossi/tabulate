@@ -263,6 +263,54 @@ Year  Income  Expenses
 `,
 	},
 	{
+		style: CompactUnicode,
+		align: TL,
+		input: borderTestBasic,
+		result: `
+        ┏━━━━┳━━━━━━┳━━━━━━━━┓
+        ┃Year┃Income┃Expenses┃
+        ┡━━━━╇━━━━━━╇━━━━━━━━┩
+        │2018│100   │90      │
+        │    │      │91      │
+        │    │      │92      │
+        │2019│110   │85      │
+        │2020│107   │50      │
+        └────┴──────┴────────┘
+`,
+	},
+	{
+		style: CompactUnicodeLight,
+		align: TL,
+		input: borderTestBasic,
+		result: `
+        ┌────┬──────┬────────┐
+        │Year│Income│Expenses│
+        ├────┼──────┼────────┤
+        │2018│100   │90      │
+        │    │      │91      │
+        │    │      │92      │
+        │2019│110   │85      │
+        │2020│107   │50      │
+        └────┴──────┴────────┘
+`,
+	},
+	{
+		style: CompactUnicodeBold,
+		align: TL,
+		input: borderTestBasic,
+		result: `
+        ┏━━━━┳━━━━━━┳━━━━━━━━┓
+        ┃Year┃Income┃Expenses┃
+        ┣━━━━╋━━━━━━╋━━━━━━━━┫
+        ┃2018┃100   ┃90      ┃
+        ┃    ┃      ┃91      ┃
+        ┃    ┃      ┃92      ┃
+        ┃2019┃110   ┃85      ┃
+        ┃2020┃107   ┃50      ┃
+        ┗━━━━┻━━━━━━┻━━━━━━━━┛
+`,
+	},
+	{
 		style: Colon,
 		align: TL,
 		input: borderTestBasic,
@@ -1192,7 +1240,8 @@ func TestStyles(t *testing.T) {
 			rowSep = "\n"
 		}
 		result := tab(test.style, test.align, test.input, rowSep)
-		match(t, result, test.result, fmt.Sprintf("TestStyles %d", idx))
+		match(t, result, test.result,
+			fmt.Sprintf("TestStyles %d (%s/%s)", idx, test.style, test.align))
 	}
 }
 

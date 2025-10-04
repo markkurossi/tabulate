@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2021 Markku Rossi
+// Copyright (c) 2020-2025 Markku Rossi
 //
 // All rights reserved.
 //
@@ -63,6 +63,7 @@ type Style int
 // Table styles.
 const (
 	Plain Style = iota
+	CompactPlain
 	ASCII
 	Unicode
 	UnicodeLight
@@ -82,6 +83,7 @@ const (
 // Styles list all supported tabulation types.
 var Styles = map[string]Style{
 	"plain":          Plain,
+	"compactplain":   CompactPlain,
 	"ascii":          ASCII,
 	"uc":             Unicode,
 	"uclight":        UnicodeLight,
@@ -161,6 +163,10 @@ var asciiBorder = Border{
 	BR: "+",
 }
 
+var compactBorder = Border{
+	VM: " ",
+}
+
 var unicodeHeader = Border{
 	HT: "\u2501",
 	HM: "\u2501",
@@ -235,6 +241,10 @@ var unicodeBold = Border{
 
 var borders = map[Style]Borders{
 	Plain: {},
+	CompactPlain: {
+		Header: compactBorder,
+		Body:   compactBorder,
+	},
 	ASCII: {
 		Header: asciiBorder,
 		Body:   asciiBorder,
@@ -386,7 +396,7 @@ func New(style Style) *Tabulate {
 		Measure: MeasureUnicode,
 	}
 	switch style {
-	case Colon, Simple, SimpleUnicode, SimpleUnicodeBold,
+	case CompactPlain, Colon, Simple, SimpleUnicode, SimpleUnicodeBold,
 		CompactUnicode, CompactUnicodeLight, CompactUnicodeBold:
 		tab.Padding = 0
 	case CSV:

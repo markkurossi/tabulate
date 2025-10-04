@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2021 Markku Rossi
+// Copyright (c) 2020-2025 Markku Rossi
 //
 // All rights reserved.
 //
@@ -180,6 +180,19 @@ func ExampleArray() {
 	// +---+---+---+
 	// | 1 | 2 | 3 |
 	// +---+---+---+
+}
+
+func ExampleCompactPlain() {
+	tab, err := Array(New(CompactPlain), [][]interface{}{
+		{"a", "b", "c"},
+		{"1", "2", "3"},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	tab.Print(os.Stdout)
+	// Output: a b c
+	// 1 2 3
 }
 
 func ExampleArray_second() {

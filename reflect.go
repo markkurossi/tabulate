@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2021 Markku Rossi
+// Copyright (c) 2020-2025 Markku Rossi
 //
 // All rights reserved.
 //
@@ -303,10 +303,7 @@ func reflectMap(tab *Tabulate, flags Flags, tags map[string]bool,
 				return false
 			}
 		}
-		if di.Height() <= dj.Height() {
-			return true
-		}
-		return false
+		return di.Height() <= dj.Height()
 	})
 
 	for _, r := range rows {

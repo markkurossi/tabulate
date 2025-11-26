@@ -4,6 +4,8 @@
 // All rights reserved.
 //
 
+// Package tabulate implements functions for simple data
+// visualization.
 package tabulate
 
 import (
@@ -421,7 +423,7 @@ func escapeCSV(val string) string {
 
 	var runes []rune
 	runes = append(runes, '"')
-	for _, r := range []rune(val) {
+	for _, r := range val {
 		if r == '"' {
 			runes = append(runes, '"')
 		}

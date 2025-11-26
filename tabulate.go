@@ -438,7 +438,7 @@ func outputJSON(t *Tabulate, o io.Writer) {
 		fmt.Fprintf(o, "JSON marshal failed: %s", err)
 		return
 	}
-	fmt.Fprintf(o, string(data))
+	fmt.Fprintf(o, "%s", string(data))
 	fmt.Fprintln(o)
 }
 

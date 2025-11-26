@@ -1,5 +1,5 @@
 module github.com/markkurossi/tabulate
 
-go 1.19
+go 1.24.0
 
-require golang.org/x/text v0.7.0
+require golang.org/x/text v0.31.0
